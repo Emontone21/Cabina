@@ -1,0 +1,2 @@
+Copia de los clips de brazos y manos de la bateria 1 (bateria_2026-10-17_172643) para medir la v12 por separado.
+analisis_v12_base = v12 sin cambios (igual a v11); analisis_v12_cN = solo hasta el cambio N; ver HISTORIAL.
