@@ -1,0 +1,4 @@
+﻿Copia de la cabina v0.2.1 (carton, "el numero de tiesme"), archivada el 28/10/2026 antes de armar la v0.3 (el juego de los hilos).
+Es una copia para guardar: las rutas no se ajustaron, asi que no abre desde esta carpeta.
+Para volver a usarla: copiar estos archivos encima de los de "3. experiencia" (antes archivar la version que este ahi).
+Tiene las escenas que la v0.3 saca: 7 Decidis (botones con la mano), 8 El nombre (criptico), 9 La funcion y 10 Selfie.

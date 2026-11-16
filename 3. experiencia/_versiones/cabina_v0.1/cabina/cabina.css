@@ -1,0 +1,92 @@
+/* Capas de la cabina encima de la imagen 9:16. --u = 1% del alto de la imagen (lo pone pantalla.js), así todo escala
+   igual en el monitor y en la tele. Material provisorio (cartón): emojis, colores planos, fuentes del sistema. */
+#cab { position: absolute; pointer-events: none; overflow: hidden; z-index: 5; --u: 7px;
+  font-family: "Arial Rounded MT Bold", "Segoe UI", system-ui, sans-serif; }
+#cab > * { position: absolute; }
+#cabHilos, #cabRuido { inset: 0; width: 100%; height: 100%; }
+#cabRuido { mix-blend-mode: normal; }
+
+/* ---- título de la Espera ---- */
+#cabTitulo { inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--u) * 2);
+  opacity: 0; transition: opacity .6s ease; }
+#cabTitulo.visible { opacity: 1; }
+#cabTitulo .logo { font-size: calc(var(--u) * 13); font-weight: 900; letter-spacing: calc(var(--u) * .2);
+  text-shadow: 0 calc(var(--u) * .6) 0 rgba(0,0,0,.18); -webkit-text-stroke: calc(var(--u) * .35) #fff; paint-order: stroke fill; }
+#cabTitulo .logo span { display: inline-block; animation: salto 1.6s ease-in-out infinite; }
+#cabTitulo .sub { font-size: calc(var(--u) * 3.2); color: #3a6ea5; font-weight: 700; }
+#cabTitulo .pasa { margin-top: calc(var(--u) * 14); font-size: calc(var(--u) * 2.6); color: #fff; background: #4cc9f0;
+  padding: calc(var(--u) * 1) calc(var(--u) * 3); border-radius: calc(var(--u) * 4); animation: titila 1.4s ease-in-out infinite;
+  box-shadow: 0 calc(var(--u) * .5) 0 #2a9dc4; }
+@keyframes salto { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(calc(var(--u) * -1.6)) } }
+@keyframes titila { 0%, 100% { opacity: 1 } 50% { opacity: .45 } }
+
+/* ---- indicador de consigna (arriba) ---- */
+#cabIndicador { left: 6%; right: 6%; top: 2.5%; display: flex; align-items: center; gap: calc(var(--u) * 1.5);
+  background: rgba(255,255,255,.93); border-radius: calc(var(--u) * 3); padding: calc(var(--u) * 1.2) calc(var(--u) * 2);
+  box-shadow: 0 calc(var(--u) * .5) calc(var(--u) * 1.5) rgba(0,0,0,.25); color: #233; transform: translateY(calc(-100% - var(--u) * 6)); opacity: 0;
+  transition: transform .35s cubic-bezier(.3,1.6,.5,1), opacity .2s; }
+#cabIndicador.visible { transform: translateY(0); opacity: 1; }
+#cabIndicador .icono { font-size: calc(var(--u) * 6.5); line-height: 1; animation: menea 0.9s ease-in-out infinite; }
+#cabIndicador .texto { font-size: calc(var(--u) * 3.1); font-weight: 800; line-height: 1.15; flex: 1; }
+#cabIndicador .texto small { display: block; font-size: calc(var(--u) * 1.8); color: #e05a7a; text-transform: uppercase; letter-spacing: .06em; }
+#cabIndicador .texto em { display: block; font-size: calc(var(--u) * 1.7); font-style: normal; color: #678; font-weight: 600; }
+#cabIndicador .marca { font-size: calc(var(--u) * 6); font-weight: 900; }
+#cabIndicador .marca.ok { color: #2fb36b; animation: pop .35s ease-out; }
+#cabIndicador .marca.no { color: #e5484d; animation: pop .35s ease-out; }
+@keyframes menea { 0%, 100% { transform: rotate(-10deg) scale(1) } 50% { transform: rotate(10deg) scale(1.1) } }
+@keyframes pop { 0% { transform: scale(.2) } 70% { transform: scale(1.3) } 100% { transform: scale(1) } }
+
+/* ---- ESTATUA + timer (centro) ---- */
+#cabEstatua { left: 0; right: 0; top: 34%; display: none; flex-direction: column; align-items: center; gap: calc(var(--u) * 1); }
+#cabEstatua.visible { display: flex; }
+#cabEstatua .cartel { font-size: calc(var(--u) * 8); font-weight: 900; color: #ff3b5c; -webkit-text-stroke: calc(var(--u) * .45) #fff;
+  paint-order: stroke fill; text-shadow: 0 calc(var(--u) * .7) 0 rgba(0,0,0,.25); }
+#cabEstatua .cartel.pop { animation: pop .4s ease-out; }
+#cabEstatua .timer { font-size: calc(var(--u) * 9); font-weight: 900; color: #fff; background: #233; width: calc(var(--u) * 14);
+  height: calc(var(--u) * 14); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: calc(var(--u) * .6) solid #fff; }
+#cabEstatua .timer.vacio { display: none; }
+#cabEstatua.roto .timer { background: #000; color: #7f7; font-family: ui-monospace, monospace; }
+
+/* ---- puntaje (3.3) ---- */
+#cabPuntaje { left: 0; right: 0; top: 30%; display: none; flex-direction: column; align-items: center; color: #fff; text-align: center; }
+#cabPuntaje.visible { display: flex; animation: pop .5s ease-out; }
+#cabPuntaje .num { font-size: calc(var(--u) * 14); font-weight: 900; color: #ff3b5c; -webkit-text-stroke: calc(var(--u) * .4) #fff; paint-order: stroke fill; }
+#cabPuntaje .txt { font-size: calc(var(--u) * 3); font-weight: 700; }
+
+/* ---- viñeta de diálogo (abajo) ---- */
+#cabVineta { left: 4%; right: 4%; bottom: 3%; display: flex; align-items: flex-end; gap: calc(var(--u) * 1.2);
+  transform: translateY(160%); transition: transform .25s ease; }
+#cabVineta.visible { transform: translateY(0); }
+#cabVineta .cara { flex: none; width: calc(var(--u) * 9); height: calc(var(--u) * 9); border-radius: 50%; border: calc(var(--u) * .5) solid #fff;
+  box-shadow: 0 calc(var(--u) * .4) calc(var(--u) * 1) rgba(0,0,0,.3); background: #ffcf4d; display: flex; align-items: center; justify-content: center; font-size: calc(var(--u) * 5.5); }
+#cabVineta.richie .cara::before { content: "🧢"; }
+#cabVineta.tiesme .cara { background: #000 url("../../1. tiesme modelo/estados_cara/full/base.jpg") no-repeat;
+  background-size: calc(var(--u) * 9 * 512 / 150) auto; background-position: calc(var(--u) * 9 * -295 / 150) calc(var(--u) * 9 * -315 / 150); }
+#cabVineta .globo { flex: 1; background: #fff; color: #222; border-radius: calc(var(--u) * 2.2); padding: calc(var(--u) * 1.1) calc(var(--u) * 1.8);
+  box-shadow: 0 calc(var(--u) * .4) calc(var(--u) * 1.2) rgba(0,0,0,.25); min-height: calc(var(--u) * 6); }
+#cabVineta .quien { font-size: calc(var(--u) * 1.7); font-weight: 900; color: #e05a7a; letter-spacing: .08em; }
+#cabVineta.tiesme .quien { color: #5b5bd6; letter-spacing: .02em; }
+#cabVineta .texto { font-size: calc(var(--u) * 2.7); font-weight: 700; line-height: 1.2; min-height: 1.2em; }
+#cabVineta.oscura .globo { background: #0b0b0f; color: #eee; border: 1px solid #333; }
+#cabVineta.oscura .cara { border-color: #333; }
+
+/* ---- negro, ojo de Richie en la oscuridad, aviso de sonido ---- */
+#cabNegro { inset: 0; background: #000; opacity: 0; }
+#cabOjo { left: 32%; width: 36%; top: 30%; aspect-ratio: 2 / 1; background: #f4f4f4; border-radius: 50%; display: none; overflow: hidden;
+  box-shadow: 0 0 calc(var(--u) * 4) rgba(255,255,255,.25); z-index: 2; animation: parpadeo 4s infinite; }
+#cabOjo.visible { display: block; }
+#cabOjo .iris { position: absolute; left: 35%; top: 15%; width: 30%; height: 70%; border-radius: 50%; background: radial-gradient(circle, #000 35%, #3a7d3a 36%, #1d3f1d 70%);
+  transition: transform .25s ease; }
+@keyframes parpadeo { 0%, 92%, 100% { transform: scaleY(1) } 95% { transform: scaleY(.05) } }
+#cabSonido { left: 0; right: 0; bottom: 1%; text-align: center; color: rgba(0,0,0,.45); font-size: calc(var(--u) * 1.6); display: none; }
+#cabSonido.visible { display: block; }
+
+/* ---- panel de quien atiende (D) y pausa ---- */
+#cabPanel { position: fixed; left: 12px; top: 12px; width: 340px; max-height: calc(100vh - 24px); overflow-y: auto; z-index: 35;
+  background: rgba(10, 12, 18, .9); color: #dfe3ea; font: 12px/1.45 ui-monospace, Consolas, monospace; padding: 10px 12px; border-radius: 10px;
+  display: none; white-space: pre-wrap; }
+#cabPanel.visible { display: block; }
+#cabPanel b { color: #fff; } #cabPanel .si { color: #7bd88f; } #cabPanel .no { color: #ff7a7a; } #cabPanel .dim { color: #8a90a0; }
+#cabPausa { position: fixed; right: 12px; top: 12px; z-index: 36; background: #b8860b; color: #fff; font: 600 13px system-ui; padding: 4px 10px;
+  border-radius: 6px; display: none; }
+#cabPausa.visible { display: block; }

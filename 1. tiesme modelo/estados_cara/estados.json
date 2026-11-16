@@ -1,0 +1,193 @@
+{
+ "S": 512,
+ "E_POS": [
+  270,
+  302
+ ],
+ "M_POS": [
+  298,
+  393
+ ],
+ "B_POS": [
+  274,
+  286
+ ],
+ "ZOOM": [
+  250,
+  280,
+  230,
+  225
+ ],
+ "full": [
+  "ojoscerrados",
+  "base",
+  "preocupacion",
+  "sospecha",
+  "E",
+  "O",
+  "nocompro",
+  "sorpresa",
+  "O_v2",
+  "A",
+  "feliz_v2",
+  "feliz",
+  "feliz_v3",
+  "O_v3",
+  "O_v4"
+ ],
+ "ojos": [
+  "ojoscerrados",
+  "base",
+  "preocupacion",
+  "sospecha",
+  "E",
+  "O",
+  "nocompro",
+  "sorpresa",
+  "O_v2",
+  "A",
+  "feliz_v2",
+  "feliz",
+  "feliz_v3",
+  "O_v3",
+  "O_v4"
+ ],
+ "boca": [
+  "ojoscerrados",
+  "base",
+  "preocupacion",
+  "sospecha",
+  "E",
+  "O",
+  "nocompro",
+  "sorpresa",
+  "O_v2",
+  "A",
+  "feliz_v2",
+  "feliz",
+  "feliz_v3",
+  "O_v3",
+  "O_v4"
+ ],
+ "cejas": [
+  "base",
+  "up",
+  "down"
+ ],
+ "clips": [
+  {
+   "from": "ojoscerrados",
+   "to": "preocupacion",
+   "dir": "clips/00_ojoscerrados-preocupacion",
+   "n": 4
+  },
+  {
+   "from": "preocupacion",
+   "to": "sospecha",
+   "dir": "clips/01_preocupacion-sospecha",
+   "n": 5
+  },
+  {
+   "from": "sospecha",
+   "to": "feliz_v2",
+   "dir": "clips/02_sospecha-feliz_v2",
+   "n": 3
+  },
+  {
+   "from": "feliz_v2",
+   "to": "O",
+   "dir": "clips/03_feliz_v2-O",
+   "n": 10
+  },
+  {
+   "from": "O",
+   "to": "nocompro",
+   "dir": "clips/04_O-nocompro",
+   "n": 3
+  },
+  {
+   "from": "nocompro",
+   "to": "feliz_v2",
+   "dir": "clips/05_nocompro-feliz_v2",
+   "n": 5
+  },
+  {
+   "from": "feliz_v2",
+   "to": "sorpresa",
+   "dir": "clips/06_feliz_v2-sorpresa",
+   "n": 3
+  },
+  {
+   "from": "sorpresa",
+   "to": "sorpresa",
+   "dir": "clips/07_sorpresa-sorpresa",
+   "n": 5
+  },
+  {
+   "from": "sorpresa",
+   "to": "O",
+   "dir": "clips/08_sorpresa-O",
+   "n": 3
+  },
+  {
+   "from": "O",
+   "to": "feliz_v2",
+   "dir": "clips/09_O-feliz_v2",
+   "n": 7
+  },
+  {
+   "from": "feliz_v2",
+   "to": "feliz",
+   "dir": "clips/10_feliz_v2-feliz",
+   "n": 3
+  },
+  {
+   "from": "feliz",
+   "to": "feliz_v3",
+   "dir": "clips/11_feliz-feliz_v3",
+   "n": 3
+  },
+  {
+   "from": "feliz_v3",
+   "to": "feliz",
+   "dir": "clips/12_feliz_v3-feliz",
+   "n": 3
+  },
+  {
+   "from": "feliz",
+   "to": "feliz_v3",
+   "dir": "clips/13_feliz-feliz_v3",
+   "n": 3
+  },
+  {
+   "from": "feliz_v3",
+   "to": "feliz",
+   "dir": "clips/14_feliz_v3-feliz",
+   "n": 3
+  },
+  {
+   "from": "feliz",
+   "to": "feliz_v3",
+   "dir": "clips/15_feliz-feliz_v3",
+   "n": 3
+  },
+  {
+   "from": "feliz_v3",
+   "to": "sorpresa",
+   "dir": "clips/16_feliz_v3-sorpresa",
+   "n": 8
+  },
+  {
+   "from": "sorpresa",
+   "to": "O_v4",
+   "dir": "clips/17_sorpresa-O_v4",
+   "n": 5
+  },
+  {
+   "from": "O_v4",
+   "to": "O_v2",
+   "dir": "clips/18_O_v4-O_v2",
+   "n": 3
+  }
+ ]
+}

@@ -1,0 +1,5 @@
+﻿Copia de la cabina v0.3 (carton, "el numero de tiesme · los hilos"), archivada el 1/11/2026 antes de sacar el juego de los hilos.
+Es una copia para guardar: las rutas no se ajustaron, asi que no abre desde esta carpeta.
+Para volver a usarla: copiar estos archivos encima de los de "3. experiencia" (antes archivar la version que este ahi).
+Tiene el juego de los hilos (escenas 7 y 8, cabina/titere.js) que Agustin pidio sacar ("no me gusto el juego que agregamos").
+El motor ya tiene el cambio 7 del tracking v13 (brazos cruzados).

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tracking tiesme</title>
+<style>
+  :root { --panel: rgba(18, 20, 26, 0.86); --txt: #e8eaf0; --dim: #9aa0ad; --ok: #7bd88f; --bad: #ff7a7a; --acc: #4fc3f7; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #20232a; color: var(--txt); font: 13px/1.4 system-ui, sans-serif; }
+  #vista { display: block; width: 100vw; height: 100vh; }
+  #panel { position: fixed; top: 12px; left: 12px; width: 250px; padding: 12px 14px; background: var(--panel); border-radius: 10px; }
+  #panel.oculto, #cam.oculto { display: none; }
+  .titulo { font-weight: 600; font-size: 14px; margin-bottom: 6px; display: flex; justify-content: space-between; }
+  #fps { color: var(--dim); font-weight: 400; }
+  #estado { color: var(--dim); white-space: pre-line; margin-bottom: 10px; font-size: 12px; }
+  #estado .ok { color: var(--ok); } #estado .bad { color: var(--bad); }
+  label { display: flex; align-items: center; gap: 6px; margin: 4px 0; cursor: pointer; }
+  label.slider { display: grid; grid-template-columns: auto 1fr 36px; }
+  input[type=range] { width: 100%; }
+  button { width: 100%; margin-top: 6px; padding: 6px; background: #2d3240; color: var(--txt); border: 1px solid #3b4252; border-radius: 6px; cursor: pointer; font: inherit; }
+  button:hover { border-color: var(--acc); }
+  kbd { font: 11px ui-monospace, monospace; padding: 0 4px; border: 1px solid #4a5163; border-radius: 3px; color: var(--dim); margin-left: auto; }
+  .ayuda { color: var(--dim); font-size: 11px; margin-top: 10px; }
+  #cam { position: fixed; right: 12px; bottom: 12px; width: 300px; border-radius: 8px; overflow: hidden; background: #000; }
+  #cam video, #cam canvas { display: block; width: 100%; }
+  #cam canvas { position: absolute; inset: 0; height: 100%; }
+  #cam.espejo video, #cam.espejo canvas { transform: scaleX(-1); }
+  #demo { position: fixed; top: 12px; right: 12px; padding: 4px 10px; background: #b8860b; color: #fff; border-radius: 6px; font-weight: 600; display: none; }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+    "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs"
+  }
+}
+</script>
+</head>
+<body>
+<div id="vieja" style="position:fixed;inset:0;z-index:99;background:rgba(120,0,0,.92);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font:600 22px system-ui;text-align:center;padding:30px">ESTA ES UNA VERSIÓN VIEJA<br><span style="font-weight:400;font-size:16px">La actual se abre con <b>ABRIR_TEST.bat</b> en la carpeta <b>2. tracking webcam</b>.<br>Cerrá esta pestaña y la ventana negra de esta versión.</span><button onclick="document.getElementById('vieja').remove()" style="font:14px system-ui;padding:8px 14px;border-radius:6px;border:0;cursor:pointer">Usarla igual (comparar)</button></div>
+<canvas id="vista"></canvas>
+
+<div id="panel">
+  <div class="titulo"><span style="color:#ff7a7a">VIEJA v1</span> <span id="fps"></span></div>
+  <div id="estado">Cargando…</div>
+  <label><input type="checkbox" id="o-mirror" checked> Espejo <kbd>M</kbd></label>
+  <label><input type="checkbox" id="o-head" checked> Cabeza</label>
+  <label><input type="checkbox" id="o-chest" checked> Pecho</label>
+  <label><input type="checkbox" id="o-arms" checked> Brazos</label>
+  <label><input type="checkbox" id="o-fingers" checked> Manos y dedos</label>
+  <label class="slider">Suavizado <input type="range" id="o-smooth" min="0" max="0.95" step="0.05" value="0.6"><span id="v-smooth">0.60</span></label>
+  <button id="b-calib">Calibrar postura neutra <kbd>C</kbd></button>
+  <button id="b-view">Recentrar vista <kbd>R</kbd></button>
+  <div class="ayuda"><kbd>H</kbd> ocultar panel · <kbd>V</kbd> cámara · <kbd>F</kbd> pantalla completa<br>Mouse: girar / zoom / mover la vista.</div>
+</div>
+
+<div id="cam" class="espejo"><video id="video" playsinline muted></video><canvas id="overlay"></canvas></div>
+<div id="demo">MODO DEMO (sin cámara)</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

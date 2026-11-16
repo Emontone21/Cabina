@@ -1,0 +1,4 @@
+﻿Copia de la cabina v0.4 (carton, "el numero de tiesme", sin juego final), archivada el 5/11/2026 antes de armar la v0.5 (el juego "Cambio!").
+Es una copia para guardar: las rutas no se ajustaron, asi que no abre desde esta carpeta.
+Para volver a usarla: copiar estos archivos encima de los de "3. experiencia" (antes archivar la version que este ahi).
+El motor tiene los cambios 7 y 8 del tracking v13 (brazos cruzados).

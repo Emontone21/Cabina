@@ -1,0 +1,4 @@
+Copia de la cabina v0.2 (carton, "el numero de tiesme"), archivada el 20/10/2026 antes de armar la v0.2.1.
+Es una copia para guardar: las rutas no se ajustaron, asi que no abre desde esta carpeta.
+Para volver a usarla: copiar estos archivos encima de los de "3. experiencia" (antes archivar la version que este ahi).
+Incluye el LEEME_CABINA.md tal como estaba (con la devolucion de la prueba 2 y el plan v0.2.1).

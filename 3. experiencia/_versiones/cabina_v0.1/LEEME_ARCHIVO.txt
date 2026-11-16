@@ -1,0 +1,3 @@
+Copia de la cabina v0.1 (carton), archivada el 20/10/2026 antes de armar la v0.2.
+Es una copia para guardar: las rutas no se ajustaron, asi que no abre desde esta carpeta.
+Para volver a usarla: copiar estos archivos encima de los de "3. experiencia" (antes archivar la version que este ahi).

@@ -1,0 +1,8 @@
+# Videos de mas de 100 MB: GitHub no los acepta (quedan solo en el disco)
+2. tracking webcam/_pruebas/cabina/partida_20261020_012739.webm
+2. tracking webcam/_pruebas/cabina/partida_20261020_013853.webm
+2. tracking webcam/_pruebas/cabina/partida_20261021_192832.webm
+# basura del sistema
+.DS_Store
+Thumbs.db
+desktop.ini

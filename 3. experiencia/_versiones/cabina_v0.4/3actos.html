@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tiesme · cabina v0.2.1 (el número de tiesme)</title>
+<!-- Cabina de 3 actos (cartón). El motor es una copia del tracking v12 (motor_v12/app.js); la experiencia está en
+     cabina/ y los textos y tiempos en guion.js. Se abre con ABRIR_3ACTOS_TEST.bat. -->
+<style>
+  /* (estilos del panel del tracking, iguales a "2. tracking webcam/index.html": el motor los usa) */
+  :root { --panel: rgba(18, 20, 26, 0.86); --txt: #e8eaf0; --dim: #9aa0ad; --ok: #7bd88f; --bad: #ff7a7a; --acc: #4fc3f7; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: var(--txt); font: 13px/1.4 system-ui, sans-serif; }
+  #vista { display: block; position: absolute; }
+  #panel { position: fixed; top: 12px; left: 12px; width: 260px; max-height: calc(100vh - 24px); overflow-y: auto; padding: 12px 14px; background: var(--panel); border-radius: 10px; box-sizing: border-box; z-index: 30; }
+  #panel.oculto, #cam.oculto { display: none; }
+  .titulo { font-weight: 600; font-size: 14px; margin-bottom: 6px; display: flex; justify-content: space-between; }
+  #fps { color: var(--dim); font-weight: 400; }
+  #estado { color: var(--dim); white-space: pre-line; margin-bottom: 8px; font-size: 12px; }
+  #estado .ok { color: var(--ok); } #estado .bad { color: var(--bad); }
+  h3 { font-size: 11px; font-weight: 600; color: var(--dim); text-transform: uppercase; letter-spacing: .06em; margin: 10px 0 4px; }
+  label { display: flex; align-items: center; gap: 6px; margin: 3px 0; cursor: pointer; }
+  label.slider { display: grid; grid-template-columns: 92px 1fr 34px; }
+  input[type=range] { width: 100%; }
+  label.giro { display: grid; grid-template-columns: auto 1fr auto; }
+  select { width: 100%; padding: 2px 4px; background: #2d3240; color: var(--txt); border: 1px solid #3b4252; border-radius: 4px; font: inherit; }
+  button { width: 100%; margin-top: 6px; padding: 6px; background: #2d3240; color: var(--txt); border: 1px solid #3b4252; border-radius: 6px; cursor: pointer; font: inherit; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  button:hover { border-color: var(--acc); }
+  kbd { font: 11px ui-monospace, monospace; padding: 0 4px; border: 1px solid #4a5163; border-radius: 3px; color: var(--dim); margin-left: auto; }
+  button kbd { margin-left: 0; }
+  .ayuda { color: var(--dim); font-size: 11px; margin-top: 10px; }
+  #cam { position: fixed; right: 12px; bottom: 12px; width: 300px; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: #000; z-index: 30; }
+  #cam video, #cam canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  #cam.espejo video, #cam.espejo canvas { transform: scaleX(-1); }
+  #demo { position: fixed; top: 12px; right: 12px; padding: 4px 10px; background: #b8860b; color: #fff; border-radius: 6px; font-weight: 600; display: none; z-index: 31; }
+  #calOverlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 16px; background: rgba(5, 5, 15, .72); z-index: 40; pointer-events: none; }
+  #calPaso { font-size: 34px; font-weight: 700; text-align: center; padding: 0 30px; white-space: pre-line; }
+  #grabando { position: fixed; left: 50%; top: 12px; transform: translateX(-50%); max-width: 90vw; background: #c62828; color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 22px; font-weight: 700; text-align: center; display: none; z-index: 41; pointer-events: none; }
+  #calCuenta { font-size: 60px; color: var(--acc); font-weight: 800; }
+  #aviso { position: fixed; left: 50%; top: 16px; transform: translateX(-50%); background: #2d3240; padding: 6px 14px; border-radius: 6px; display: none; z-index: 42; }
+</style>
+<link rel="stylesheet" href="cabina/cabina.css">
+<!-- todo local (la carpeta lib es la del tracking): funciona sin internet -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "../2. tracking webcam/lib/three/three.module.js",
+    "three/addons/": "../2. tracking webcam/lib/three/addons/",
+    "@mediapipe/tasks-vision": "../2. tracking webcam/lib/mediapipe/vision_bundle.mjs"
+  }
+}
+</script>
+</head>
+<body>
+<canvas id="vista"></canvas>
+
+<!-- ===== Capas de la cabina (las acomoda cabina/pantalla.js encima de la imagen 9:16) ===== -->
+<div id="cab">
+  <canvas id="cabHilos"></canvas>
+  <canvas id="cabRuido"></canvas>
+  <div id="cabTitulo"><div class="logo"></div><div class="sub"></div><div class="pasa"></div></div>
+  <div id="cabIndicador"><div class="icono"></div><div class="texto"></div><div class="marca"></div></div>
+  <div id="cabEstatua"><div class="cartel"></div><div class="timer"></div></div>
+  <div id="cabPuntaje"><div class="num"></div><div class="txt"></div></div>
+  <div id="cabVineta"><div class="cara"></div><div class="globo"><div class="quien"></div><div class="texto"></div></div></div>
+  <div id="cabOjo"><div class="iris"></div></div>
+  <div id="cabNegro"></div>
+  <div id="cabSonido">tocá una tecla o hacé clic para activar el sonido</div>
+</div>
+<div id="cabPanel"></div>
+
+<!-- ===== Panel del tracking (escondido en la cabina: H lo muestra, V muestra la cámara) ===== -->
+<div id="panel" class="oculto">
+  <div class="titulo">Tracking tiesme v12 (motor de la cabina)<span id="fps"></span></div>
+  <div id="estado">Cargando…</div>
+
+  <h3>Pantalla</h3>
+  <label><input type="checkbox" id="o-vertical"> Tele vertical 9:16</label>
+
+  <h3>Cámara</h3>
+  <label class="giro">Girar imagen <select id="o-giro">
+    <option value="0">0° (normal)</option><option value="90">90° horario</option>
+    <option value="180">180°</option><option value="270">90° antihorario</option>
+  </select></label>
+
+  <h3>Qué sigue</h3>
+  <label><input type="checkbox" id="o-mirror"> Espejo</label>
+  <label><input type="checkbox" id="o-head"> Cabeza</label>
+  <label><input type="checkbox" id="o-chest"> Pecho</label>
+  <label><input type="checkbox" id="o-arms"> Brazos</label>
+  <label><input type="checkbox" id="o-fingers"> Manos y dedos</label>
+  <label><input type="checkbox" id="o-mapPos"> Manos a su medida (cara/cuerpo)</label>
+  <label><input type="checkbox" id="o-nearCam"> Mano a la cámara (perspectiva)</label>
+  <label><input type="checkbox" id="o-lean"> Inclinarse (cintura)</label>
+  <label><input type="checkbox" id="o-move"> Desplazarse (solo fuera del modo tele)</label>
+  <label><input type="checkbox" id="o-face"> Gestos de cara</label>
+  <label><input type="checkbox" id="o-voice"> Boca con voz (mic)</label>
+
+  <h3>Ajustes</h3>
+  <label class="slider">Suavizado <input type="range" id="o-smooth" min="0" max="0.95" step="0.05"><span id="v-smooth"></span></label>
+  <label class="slider">Reacción <input type="range" id="o-react" min="0" max="1" step="0.05"><span id="v-react"></span></label>
+  <label class="slider">Desplazamiento <input type="range" id="o-moveGain" min="0" max="3" step="0.1"><span id="v-moveGain"></span></label>
+  <label class="slider">Umbral voz <input type="range" id="o-voiceThr" min="1" max="40" step="1"><span id="v-voiceThr"></span></label>
+
+  <button id="b-calib">Calibrar postura y posición <kbd>C</kbd></button>
+  <button id="b-gestos">Calibrar gestos de cara (~30 s) <kbd>G</kbd></button>
+  <button id="b-view">Recentrar vista</button>
+
+  <h3>Pruebas (en la cabina, mejor desde ABRIR_TEST)</h3>
+  <button id="b-grabar">Grabar cámara / parar</button>
+  <button id="b-bateria">Batería de clips</button>
+  <div class="ayuda"><kbd>H</kbd> ocultar panel · <kbd>V</kbd> cámara · <kbd>F</kbd> pantalla completa · <kbd>D</kbd> panel de la cabina</div>
+</div>
+
+<div id="cam" class="espejo oculto"><video id="video" playsinline muted></video><canvas id="overlay"></canvas></div>
+<div id="demo">MODO DEMO (sin cámara)</div>
+<div id="calOverlay"><div id="calPaso"></div><div id="calCuenta"></div></div>
+<div id="aviso"></div>
+<div id="grabando"></div>
+
+<script type="module" src="motor_v12/app.js"></script>
+</body>
+</html>
