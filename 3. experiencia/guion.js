@@ -20,7 +20,7 @@
 // =====================================================================================================================
 
 export default {
-  version: 'cabina v0.5 (cartón · el número de tiesme · ¡cambio!)',
+  version: 'cabina v0.6 (el espejo · el número de tiesme · ¡cambio!)',
 
   // De qué lado de la TELE está la puerta de la cabina (por ahí se asoma tiesme al llegar).
   puerta: 'izquierda', // 'izquierda' o 'derecha'
@@ -75,15 +75,21 @@ export default {
     estatua3: 5,           // la tercera (la revelación)
     intentos: 2,           // intentos que fallan antes de la revelación
     encajeOk: 0.85,        // cuánto tiene que encajar la sombra para que la figura "salga"
+    // v0.5.1: tolerancia de los brazos, en grados, mirados como sombra (de frente, sin la profundidad): hasta tolBien
+    // de diferencia con la figura cuenta entero; desde tolNada no cuenta nada; en el medio, de a poco
+    tolBien: 15,
+    tolNada: 50,
   },
   // La FIGURA del número: la pose (como en cuerpo.js: dirección [afuera, arriba, adelante] de brazo y antebrazo) y el
   // giro del cuerpo en grados. Los brazos los pone la persona (lo de Richie); el giro lo pone tiesme (lo de ella).
+  // v0.5.1: la V subió a ~62° de la horizontal con los brazos derechos (antes 37° el brazo y 53° el antebrazo, con el
+  // codo doblado): con "brazos arriba, abiertos en V" la gente los sube a ~70° y no llegaba nunca (17/11).
   figura: {
     nombre: 'el águila',
     instruccion: 'brazos arriba, abiertos en V',
     pose: {
-      brazoIzq: { brazo: [0.78, 0.58, 0.12], ante: [0.6, 0.79, 0.08] },
-      brazoDer: { brazo: [0.78, 0.58, 0.12], ante: [0.6, 0.79, 0.08] },
+      brazoIzq: { brazo: [0.47, 0.88, 0.05], ante: [0.47, 0.88, 0.05] },
+      brazoDer: { brazo: [0.47, 0.88, 0.05], ante: [0.47, 0.88, 0.05] },
     },
     giro: 55,
   },
@@ -110,9 +116,14 @@ export default {
     final: 12,             // segundos para que salga el águila entre los tres; si no sale, ella ayuda con los brazos
     // las poses que hace ella en "copiala" (se eligen al azar, sin repetir). pose = como en cuerpo.js; detecta = lo
     // que mide la cámara (cabina/senales.js); donde = sobre qué parte de ella va el círculo.
+    // v0.5.1 (17/11): sale "brazos en cruz": con la persona cerca de la cámara vertical las muñecas quedan fuera del
+    // cuadro (no se podía cumplir) y la cruz de ella se salía de la pantalla. Entra "cabeza de costado" (la detección
+    // de Richie dice, que anda). La cruz vieja, por si vuelve:
+    //   { id: 'cruz', icono: '🙆', texto: 'brazos en cruz', detecta: 'cruz', donde: 'torso',
+    //     pose: { brazoIzq: { brazo: [1, 0.05, 0.05], ante: [1, 0.05, 0.05] }, brazoDer: { brazo: [1, 0.05, 0.05], ante: [1, 0.05, 0.05] } } },
     poses: [
-      { id: 'cruz', icono: '🙆', texto: 'brazos en cruz', detecta: 'cruz', donde: 'torso',
-        pose: { brazoIzq: { brazo: [1, 0.05, 0.05], ante: [1, 0.05, 0.05] }, brazoDer: { brazo: [1, 0.05, 0.05], ante: [1, 0.05, 0.05] } } },
+      { id: 'inclinarCabeza', icono: '🙃', texto: 'cabeza de costado', detecta: 'inclinarCabeza', donde: 'cabeza',
+        pose: { cabeza: { yaw: 0, pitch: 0, roll: 24 } } },
       { id: 'manosArriba', icono: '🙌', texto: 'manos arriba', detecta: 'manosArriba', donde: 'cabeza',
         pose: { brazoIzq: { brazo: [0.3, 1, 0.05], ante: [0.05, 1, 0.05] }, brazoDer: { brazo: [0.3, 1, 0.05], ante: [0.05, 1, 0.05] } } },
       { id: 'unaArriba', icono: '🙋', texto: 'una mano arriba', detecta: 'unaArriba', donde: 'manoDer',

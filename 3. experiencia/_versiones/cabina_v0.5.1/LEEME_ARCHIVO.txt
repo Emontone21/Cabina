@@ -1,0 +1,4 @@
+Copia de la cabina v0.5.1 (carton, "el numero de tiesme", aguila con encaje como sombra, "copiala" con cabeza de costado), archivada el 22/11/2026 antes de armar la v0.5.2 (menos retraso: cambios 18 y 19 del tracking v15).
+Es una copia para guardar: las rutas no se ajustaron, asi que no abre desde esta carpeta.
+Para volver a usarla: copiar estos archivos encima de los de "3. experiencia" (antes archivar la version que este ahi).
+El motor tiene los cambios del tracking hasta la v14 (3 hilos, 16 prendido, 17 apagado).

@@ -78,5 +78,9 @@ Usuario: **Agustín**, artista 3D (Blender), habla español rioplatense. Hablarl
   para la Mac (uso y plan B en `3. experiencia/LEEME_CABINA.md`, "En la Mac"; sin probar todavía en una Mac). En la
   Mac hay que instalar Node, ffmpeg y Chrome y configurar la C920 en G HUB. Expulsar el disco antes de desenchufarlo.
 - Abrir: `2. tracking webcam/ABRIR_TEST.bat` (servidor Node en el puerto 8090). La página dice la versión en el panel.
+- **Notebook con dos placas de video** (la de Agustín: RTX 4050 + Intel): Chrome usa la Intel salvo que se le diga lo
+  contrario, y la detección va 2–3 veces más lenta (tiesme atrasada). Se arregla en Windows: Configuración → Sistema →
+  Pantalla → Gráficos → Chrome → Alto rendimiento. Cómo comprobarlo y cómo se mide el retraso: `2. tracking webcam/
+  TECNICO.md`, "Retraso: de dónde sale y cómo se mide".
 - La cámara C920 está configurada en G HUB (prioridad cuadros, foco fijo); la vista previa de G HUB ocupa la cámara.
 - PC con Windows, GPU RTX 3060, Chrome, Node y ffmpeg instalados. TouchDesigner no está instalado.

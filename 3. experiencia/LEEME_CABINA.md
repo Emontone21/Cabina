@@ -1,4 +1,146 @@
-# Cabina — v0.5 (cartón): "el número de tiesme · ¡cambio!"
+# Cabina — v0.6 (el espejo): "el número de tiesme · ¡cambio!"
+
+## Estado v0.6 (22/11) — el espejo tapado (falta probar con la cámara)
+Agustín eligió **El espejo tapado** en la maqueta de mundos y pidió: "sí, dale, pasalo a producción". La v0.5.2 (cartón
+de circo) quedó en `_versiones/cabina_v0.5.2/`. La historia, los textos, los juegos y el motor no cambiaron: solo cómo
+se ve.
+- **El mundo**: tiesme está dentro de un espejo de marco plateado, en arco. Detrás de ella, el cuarto reflejado (paredes,
+  piso de tablas, una puerta entornada, un cuadro y una lamparita tibia arriba a la derecha). La luz 3D sobre ella sale de
+  esa lamparita (tibia, de costado y de arriba).
+- **El telón es una sábana gris** colgada de clavos sobre el espejo: en la espera tapa todo con el título encima; la
+  rendija la levanta un poco desde abajo (se le ven los pies); al abrir **cae al piso**; en el final **sube sola** y
+  vuelve a tapar.
+- **Ensayo (estatuas)**: un círculo de luz tibia en la pared del fondo, donde cae la sombra; la figura del águila sigue
+  dorada.
+- **Desde la luz de trabajo (escena 5 en adelante) el espejo se rompe**: grietas en el vidrio, delante de ella; la
+  lamparita se apaga, el cuarto se enfría, la puerta queda abierta y negra, y la luz sobre ella pasa a fría y dura.
+- **Textos sobrios**: el título "tiesme" en cursiva, sin colores de circo. Los globos pasaron a **subtítulos** (Richie a
+  la izquierda; ella a la derecha, en cursiva celeste). Sin cartel de teatro. Consigna, medidor, críptico y selfie en
+  negro translúcido con filete dorado.
+- **Íconos de línea en lugar de emojis** (consignas, anillo y botones): manos arriba, saludar, girar e inclinar la
+  cabeza, boca, sonrisa, águila, espejo y brazos. Están en `cabina/pantalla.js` (`ICONOS`). Si un emoji no tiene dibujo,
+  sale el emoji como texto.
+- **Archivos tocados**: `cabina/escenario.js` (reescrito: el cuarto, la versión rota y las luces), `cabina/cabina.css`
+  (reescrito), `cabina/pantalla.js` (íconos, el marco `#cabMarco`, la sábana dentro de `#cabTelon`, el título sin
+  colores), `guion.js` (solo el número de versión) y `3actos.html` (el título). La maqueta de mundos
+  (`ABRIR_MUNDOS.bat`) sigue andando: su `mundos.css` esconde la sábana y el marco nuevos.
+- **Probado sin cámara** (22/11, `v14_grabacion02.mp4`, saltando con las teclas): espera con la sábana y el título,
+  rendija, la sábana cae, escena 2 con el marco y los subtítulos, escena 3 con el círculo de luz y la figura, escena 5
+  con las grietas y la luz fría, final con la sábana que sube. En la consola solo faltan los audios (las voces todavía no
+  están grabadas), igual que antes.
+- **Quedó igual a propósito**: las frases de circo del guion ("el número de tiesme", la entrada en calor, el ensayo, la
+  función, ¡Cambio!): se cambian en `guion.js` cuando Agustín reescriba los textos para el espejo. La música y los
+  efectos siguen siendo los generados (faltan, para este mundo: tela que cae, vidrio que cruje, casa vacía).
+- **Para después**: el cuarto del fondo hecho en Blender (hoy es un dibujo plano) y probar todo con la cámara.
+
+## Estado v0.5.2 (22/11) — menos retraso (archivada en `_versiones/cabina_v0.5.2/`)
+Agustín, después de dos partidas (`partida_20261122_174048` y `_174801`): "los movimientos van demasiado lagueados,
+tarda en reaccionar cuando yo me muevo". La v0.5.1 quedó en `_versiones/cabina_v0.5.1/`. La historia, los textos y los
+juegos no cambiaron: solo el motor.
+- **Qué cambió**: el motor recibió los cambios 18 y 19 del tracking v15 (detalle y números: `2. tracking webcam/
+  HISTORIAL.md`, "Cambios v15"). 18 = cuerpo, manos y cara se detectan a la vez (de tomar el cuadro a tener el resultado:
+  48 → 19–26 ms en el panel de Claude con `v14_grabacion02.mp4`). 19 = los filtros reaccionan antes al arrancar un
+  movimiento (retraso de los brazos, con su grabación en vivo a 12 detecciones por segundo: 179 → 108 ms). Se apagan con
+  `?sin=18,19` en la dirección, para comparar.
+- **Lo que no se arregla desde el programa**: Chrome corría en la placa Intel de la notebook y no en la NVIDIA (comprobado:
+  `nvidia-smi` no listaba `chrome.exe`). Se cambia en Windows: Configuración → Sistema → Pantalla → Gráficos → agregar
+  Chrome → Opciones → Alto rendimiento, y reiniciar Chrome. En la PC de la cabina (una sola placa) no hace falta.
+- **Cómo mirarlo**: tecla H; la primera línea del panel ahora termina con `retraso: cámara N + detección N ms`. Lo que
+  la cámara tarda sola no depende del programa.
+- **Costo medido**: en poses difíciles de detectar (manos en la nuca) los brazos saltan algo más que antes (saltos de más
+  de 20° por cuadro: 19 → 28 en el clip B2-05). Con la persona quieta no tiembla más que antes.
+- **Los juegos**: las señales de "Richie dice" y "copiala" usan los puntos de la cámara, no los filtros: no cambian. El
+  águila se mide sobre los brazos de ella, que ahora llegan antes.
+- **Probado sin cámara**: la cabina con `?video=../2. tracking webcam/_pruebas/grabaciones/v14_grabacion02.mp4` sigue a la
+  persona y no da errores. No se corrió una partida completa con la v0.5.2.
+- **Si después de esto sigue atrasada**: predicción entre detecciones y cámara a 720p (HISTORIAL v15, al final).
+- **Limpieza del 22/11** (pedida por Agustín: "eliminá lo que no se use y ocupe espacio"; aprobó la lista: "sí, borrá
+  todo"). **Borrado**: los análisis viejos sueltos de v9 a v14 (todas las carpetas `analisis_*` que no son "comparado";
+  si un documento viejo nombra una, ya no está en el disco: están en GitHub y se regeneran con el lote),
+  `B1_brazos/_mediciones_con_reloj_real`, las partidas de la cabina anteriores al 5/11 (v0.1 a v0.4, con las carpetas
+  `pruebas_claude_20261020`, `_20261028` y `_v021`; tres de esos videos no estaban en GitHub) y, fuera de la carpeta,
+  `SPOT CABINA.zip` (copia entera del proyecto del 5/11). `_pruebas` pasó de 2,0 GB a 0,95 GB. **Quedó**: los clips
+  originales de las baterías y grabaciones, los videos comparados, las partidas desde la v0.5, `_versiones` y los
+  registros de la v15 (`v12_bateria01/analisis_v15` y `analisis_v15_base`). La copia local del historial de GitHub
+  (`.git`, 1,4 GB) no se tocó; en git los archivos borrados figuran como borrados sin confirmar (no se subió nada).
+
+## Estética nueva (22/11) — cómo se eligió el espejo (ya está en la cabina: ver "Estado v0.6")
+Agustín: la cabina va a ser una **proyección dentro de una caja oscura** y quiere dejar la estética de circo por una
+oscura y minimalista, pensada de punta a punta (inicio, experiencia y final). Propuesta en maqueta animada:
+`maquetas/estetica_oscura.html` (doble clic, sin servidor). Idea "una sola luz": todo negro (en una proyección el negro
+no se ve) y una única luz que cambia: punto de guardia en la espera → círculo tibio (la función de Richie) → luz fría de
+costado (la revelación, la voz de ella) → proyección entera encendida que ilumina a la persona ("te ven") → tibia/fría
+alternadas en ¡Cambio! → dorado solo para el águila → vuelve al punto. Sin telón, carteles, globos ni barras: subtítulos
+finos (Richie recto a la izquierda, ella en cursiva a la derecha), consigna = una palabra y una línea, medidor = la
+figura dorada que se enciende. **Descartada** por Agustín: "no me estás entendiendo… armá la estética entera, el fondo
+que se usaría, cómo sería el telón principal; ya no quiero que el contexto sea un circo". Lo que pide es un **mundo** (un
+lugar con fondo y telón propios), no un manejo de luces.
+- Segunda maqueta: `maquetas/mundos.html` (doble clic). Cuatro mundos, cada uno con telón cerrado → rendija → abierto →
+  se rompe → final (los mismos estados que ya usa `pantalla.js`: `telon(false/'rendija'/true)` y las fallas):
+  **El espejo tapado** (sábana sobre un espejo; ella es tu reflejo; el vidrio se raja), **La caja de música** (la tapa es
+  el telón; ella es la figurita; se acaba la cuerda), **Transmisión de madrugada** (carta de ajuste; estudio de tele vacío;
+  se cae la señal; se apaga en un punto) y **La vidriera** (persiana metálica; ella es un maniquí; manos en el vidrio).
+  Recomendado por Claude: el espejo. **Agustín eligió el espejo** (22/11) y pasó a la cabina como v0.6.
+- **Maqueta real** (pedida: "armame la maqueta real, quiero ver de verdad cómo quedaría"): `ABRIR_MUNDOS.bat` (y
+  `.command`) → `mundos_3actos.html`. Es la cabina v0.5.2 completa (motor, tiesme 3D, tracking, guion, juegos) con los
+  cuatro mundos encima. **No toca ningún archivo de la cabina**: el importmap de esa página cambia `cabina/escenario.js` por
+  `maquetas/mundos/escenario_mundos.js` (fondo de cada mundo, versión rota desde la luz de trabajo, luz 3D sobre tiesme
+  por mundo, capa de adelante y telón propio dentro de `#cabTelon`), y `maquetas/mundos/mundos.css` cambia los textos de
+  cartón por subtítulos sobrios (Richie a la izquierda, ella a la derecha en cursiva) y esconde el cartel del teatro.
+  Tecla **W** = mundo siguiente; `?mundo=espejo|caja|tele|vidriera`. Capturas en `maquetas/mundos/capturas/`.
+  Probado con `v14_grabacion02.mp4` (escenas 2, 5 y final en los cuatro mundos, sin errores). Sigue igual que en la
+  cabina: música y efectos (los de circo, o los que falten), íconos de consignas, anillo y botones.
+
+## Estado v0.5.1 (17/11) — el águila ya sale con la V que hace la gente
+Agustín: "en el juego de la estatua por más que haga la pose no me la da por válida". La v0.5 quedó en
+`_versiones/cabina_v0.5/`. Revisado con su partida del 9/11 (`2. tracking webcam/_pruebas/cabina/
+partida_20261109_205009.webm` + `.json`), repetida en la cabina con `?video=…&sin=13`:
+- **Causa** (el tracking de los brazos medía bien): (1) la figura pedía una V baja y abierta (brazo 37° sobre la
+  horizontal, antebrazo 53°, codo doblado) y con "brazos arriba, abiertos en V" la gente los sube a ~70°: 24–33° de
+  diferencia, brazos 45–58 %; (2) el giro (lo de ella) pesa el 40 % y en el ensayo el medidor no pasaba del 60 %, se
+  leía como "lo hago mal"; (3) en el final, con el giro de ella, una V así quedaba en ~75 % (pide 85 %) y ella tenía
+  que acomodar los brazos. (Corrección 17/11: en esa partida la escena 7 la jugó otra persona, que entró a los ~203 s;
+  durante "copiala" cruz y una mano arriba, ~189–206 s, no había nadie jugando adelante. El 67 % y el "ella ayuda" del
+  registro son de esa segunda persona, con una mano en el borde del cuadro.)
+- **Cambios** (pedidos por Agustín: "sí, los tres"):
+  1. `guion.js` → `figura.pose`: V a ~62° con los brazos derechos (`[0.47, 0.88, 0.05]` brazo y antebrazo). La sombra
+     de la figura se hornea con la misma pose, así que el dibujo de la pared cambió solo.
+  2. `cabina/sombra.js` → `encaje()`: los brazos se comparan **como sombra** (de frente, sin la profundidad); hasta
+     `ensayo.tolBien` (15°) cuenta entero, desde `ensayo.tolNada` (50°) nada. Si el brazo va casi todo hacia la cámara,
+     no cuenta. El total sigue siendo brazos 60 % + giro 40 % y el umbral 85 %.
+  3. `cabina/director.js`: en el ensayo (escena 3 y el arranque de la 4) el medidor dice **"brazos N%"** (solo lo de
+     la persona): llega al 100 % y la figura igual no sale. En la cuenta de la revelación y en el final muestra el total.
+- **Medido** (su V en los segundos 85–87 del video, mientras Richie explica la pose): brazos 45–60 % → **97–100 %**. Las
+  estatuas reales están más abajo ("el video va ~9 s adelantado"): medianas 51 → 92 % y 72 → 84 %. El medidor del
+  ensayo muestra "brazos 100%". En el final, con el giro de ella, salió sola en 1,4 s (sin ayuda). Sin errores.
+- **Ojo, manos fuera del cuadro**: entre las dos estatuas (video 97,5–100,5 s) abrió tanto los brazos que **las manos
+  salieron del cuadro** (con la cámara vertical el ancho es poco) y ahí el tracking deja los brazos casi horizontales
+  (8–14°); en las estatuas pasa en algún cuadro suelto. Eso no lo arregla el puntaje.
+  Una V más cerrada (la nueva) ayuda; si pasa seguido, alejar a la persona de la cámara o abrir el plano.
+- **Para mirar en la prueba**: (1) si con la V nueva sale en el final sin que ella ayude; (2) las frases de Richie
+  después de la estatua del ensayo: "Casi. Le falta… algo. Más V." ahora contradice el medidor en 100 % (las otras dos
+  sirven: "Está bien hecho. Algo raro tiene la pared." encaja justo); (3) "copiala": revisado el 17/11, abajo.
+- **"Copiala" (revisado 17/11)**: en esa partida los ✘ de brazos en cruz y una mano arriba no fueron fallas de la
+  detección: no había nadie haciendo la pose (ver la corrección de arriba). Pero medido el encuadre de esa partida (la
+  persona cerca de la cámara vertical): los hombros ocupan **36–47 % del ancho del cuadro**. La cruz pide las muñecas a
+  más de 2,4 anchos de hombro una de otra (0,87–1,13 del ancho del cuadro) y una cruz de verdad mide ~3,4 (1,2–1,6 del
+  ancho): **las muñecas quedan afuera y la cruz no se puede cumplir** con ese encuadre. La pose de ella también sale de
+  la pantalla (plano cerrado). En la grabación de Agustín del 9/11 (`v14_grabacion02`, más lejos) los hombros ocupan
+  19 % y la cruz sí entraría: depende de dónde se pare la persona.
+- **Cambio (pedido por Agustín, "sí, cambiala")**: en `guion.js` → `cambio.poses` sale **brazos en cruz** (queda
+  comentada ahí, por si vuelve) y entra **cabeza de costado** (🙃, `inclinarCabeza`: la detección de Richie dice; ella
+  inclina la cabeza 24°). Las 5 poses: cabeza de costado · manos arriba · una mano arriba · mirá a un costado · boca.
+- **Ojo, el video de esa partida va ~9 s adelantado respecto del registro** (la cabeza de costado de Richie dice está
+  en el video a los 43–46 s y en el registro a los 33–35 s). Con eso corregido:
+  - la estatua 1 real (video 93,5–96,5 s) y la 2 (107–110 s): brazos **51 % → 92 %** y **72 % → 84 %** (medianas, v0.5
+    → v0.5.1); cuadros que con el giro de ella pasan el 85 %: **2–3 de 16 → 11 de 16**. Los que no pasan son los de una
+    muñeca en el borde del cuadro (el brazo queda medido a 14–25°). Las cifras de "85–87 s" de arriba son del momento
+    en que Richie explica la pose (la persona ya la estaba haciendo): sirven como pose, no son "la estatua 1".
+  - "copiala" cruz (video ~199–205 s): la primera persona estaba atrás, contra la pared. Una mano arriba (~210–216 s): la
+    segunda persona levantó una mano tarde y a la altura de la cara (muñeca 0,09 hombros **debajo** de la nariz; pide
+    0,15 arriba). La detección hizo lo que dice; si se quiere más fácil, bajar ese umbral es otro cambio.
+- Dato del registro: `datos.aguila.solos` da verdadero aunque ella haya ayudado (se calcula después de la ayuda); la
+  línea "águila: no salía, ella ayuda con los brazos" del registro es la que vale.
 
 ## Estado v0.5 (5/11) — LISTA PARA PROBAR con la cámara (probada de punta a punta con el demo)
 Agustín eligió el juego "¡Cambio!" (de la lista del 5/11) como final. La v0.4 quedó en `_versiones/cabina_v0.4/`.
@@ -359,8 +501,8 @@ mano arriba". Ojo: mirar para arriba sube las cejas (cuenta como "cejas") y apla
 | `cabina/director.js` | los actos paso por paso, los casos, las teclas, la cara y el panel D |
 | `cabina/cuerpo.js` | dial por parte (te copia ↔ es de ella), degradación, poses propias con "vida", grabador del gesto, posición |
 | `cabina/senales.js` | lo que mide la cámara (y los umbrales) |
-| `cabina/pantalla.js` + `cabina.css` | título, indicadores, ESTATUA/timer, viñeta, puntaje, negro, glitch |
-| `cabina/escenario.js` | fondo (burbujas → negro, glitch) y luces (pareja → dura) |
+| `cabina/pantalla.js` + `cabina.css` | título, indicadores (íconos de línea), ESTATUA/timer, subtítulos, puntaje, negro, glitch, marco del espejo y sábana (telón) |
+| `cabina/escenario.js` | fondo (el cuarto reflejado → roto, círculo del ensayo, glitch) y luces (lamparita tibia → fría) |
 | `cabina/hilos.js` | hilos de titiritero |
 | `cabina/audio.js` | sonidito, música y efectos generados; usa los archivos de `audio/` si están |
 

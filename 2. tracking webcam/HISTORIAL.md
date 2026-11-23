@@ -20,6 +20,43 @@ Qué cambió en cada versión y por qué (texto original, movido acá desde el L
 | v11 | Entrada y salida: sin salto de cabeza al calibrar (4,5° → 1,7°/cuadro), entra en ~1,2 s todo junto, suelta al salir del encuadre vertical en 0,6 s (antes 1,4) | ronda 1 de la batería 1 |
 | **v12 (actual)** | **Brazos y manos: manos en mejillas y nuca (contacto con la superficie de la cabeza), brazos cruzados en el orden correcto 61 → 83%, brazo que no queda arriba al bajarlo (1,4 → 0,7 s), aplaudir (palmas 0,92 → 0,66 largos de mano), codo detectado con peso entero; análisis repetible** | ronda 1 de la batería 1 (acuerdo del 18/10) |
 
+## Cambios v15 (22/11 — "los movimientos van demasiado lagueados, tarda en reaccionar")
+Diagnóstico (detalle en TECNICO, "Retraso: de dónde sale y cómo se mide"): el retraso se suma en cuatro tramos (cámara,
+detección, cada cuánto se detecta, filtros). En la grabación en vivo de Agustín del 10/11 (`v14_grabacion02`, 12
+detecciones/s) los filtros solos atrasaban ~180 ms; la detección, cuerpo + cara en fila (39 + 29 ms en su panel). Y
+**Chrome no estaba usando la placa NVIDIA** de la notebook (corría todo en la Intel integrada): eso lo cambia él en Windows.
+v14 archivada en `_versiones/v14`.
+- **Cambio 18** (`?sin=18`): cuerpo, manos y cara se detectan **a la vez** sobre el mismo cuadro; manos y cara ubican su
+  recorte con el cuerpo del cuadro anterior (antes esperaban al cuerpo de ese cuadro). El cuerpo se usa apenas llega; si
+  las manos o la cara tardan más, entran en el cuadro siguiente. El cuadro siguiente se pide apenas termina el cuerpo y
+  apenas la cámara entrega uno nuevo, sin esperar al dibujo. No se tocó `detector_worker.js` (las versiones archivadas
+  lo comparten). **Medido** en el panel de Claude con `v14_grabacion02.mp4` en la cabina: de tomar el cuadro a tener el
+  resultado, mediana 48 → 19–26 ms (el peor 10 %: 80 → 28–47 ms); manos detectadas 90/90 % → 92–95 %; cara nueva ~30
+  veces por segundo. En el análisis (mismo criterio imitado en `detect()`): manos B2-05 55/75 % → 54/75 %, B2-07 84/84 % →
+  82/83 %; cara igual.
+- **Cambio 19** (`?sin=19`): los filtros se enteran antes de que arrancó un movimiento. El filtro (One Euro) se abre
+  según la velocidad, y esa velocidad se suavizaba con un corte de 1 Hz: tardaba 150–300 ms en "darse cuenta". Ahora 4 Hz
+  en brazos, manos y dedos y 2 Hz en cabeza, pecho y cadera; segunda etapa ×2 → ×3; suavizado 0,7 → 0,6; reacción 0,5 →
+  0,8 (los dos últimos se siguen moviendo en el panel). **Medido** con `filtros_sim.js` (retraso de los brazos mientras
+  te movés): grabación en vivo a 12 detecciones/s 179 → 108 ms; clips de la batería 2 a 30/s 75 → 50 ms y a 15/s 104 → 75
+  ms; temblor con la persona quieta 11,0 → 12,1 °/s en vivo, igual en los clips a 30/s (8,0 → 7,9) y 7,9 → 9,7 a 15/s.
+  En el análisis real: retardo de los dedos B2-05 167 → 33 ms, B2-07 67 → 33 ms; giro de cabeza B2-02 67 → 33 ms, cabeceo
+  67 → 33 ms; cabeza quieta sin temblor nuevo (B2-07: 0,04 → 0,05° por cuadro). **Costo**: en la pose más difícil (B2-05,
+  manos en la nuca) los saltos de más de 20° por cuadro suben de 19 a 28–29 (con reacción 0,65 daba 28: no es eso, es el
+  filtro más abierto dejando pasar detecciones malas); B2-07 0 → 2; B2-02 0 → 0.
+  El cambio 17 (parecido, del 9/11) había quedado apagado: además de los filtros subía el tope de velocidad de la mano y
+  acortaba la retención, y eso era lo que traía los saltos (12 → 28 en B2-07; ahora 0 → 2).
+- **Medidor en el panel H**: al final de la línea, `retraso: cámara N + detección N ms` (cámara = desde que la cámara
+  capturó el cuadro hasta que el programa lo toma; detección = desde ahí hasta que llega al muñeco).
+- Herramientas nuevas: `filtros_sim.js` (retraso y temblor de los filtros con varios ajustes, sin navegador),
+  `retraso.js` (poco confiable, ver TECNICO); en el análisis, `?cada=2` (imita 15 detecciones/s) y `?hasta=8`.
+- Probado: análisis de B2-02/05/07/08 antes y después (`v12_bateria01/analisis_v15_base` y `analisis_v15`, solo los
+  registros) y la cabina con `v14_grabacion02.mp4` (sigue a la persona, sin errores). **Falta la prueba de Agustín con
+  la cámara.** Pasado a la cabina (v0.5.2).
+- Lo que queda si sigue sintiendo retraso después de pasar Chrome a la NVIDIA: adelantar el movimiento entre una detección
+  y la siguiente con la velocidad (predicción; puede pasarse de largo al frenar: hay que probarlo en vivo) y cámara a
+  720p (`?res=720`: menos trabajo por cuadro, a cambio de menos detalle en los dedos).
+
 ## Cambios v14 (9/11 — "pierdo movimientos": más detecciones por segundo)
 Diagnóstico: todo el tracking está pensado para 30 detecciones/s; en la notebook de Agustín iba a 8–10 y las manos se
 veían el 39 %/18 % de los cuadros (clip 1/11). Un gesto rápido cae en 2–3 detecciones y las reglas (mano nueva al 2º

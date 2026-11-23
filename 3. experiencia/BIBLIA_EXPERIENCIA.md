@@ -52,11 +52,15 @@ corta: "Bueno, basta de charla. ¡Función!". Vuelven la luz y la música alegre
 después vos a mí".
 - Se alternan dos modos, cada vez más rápido, y Richie grita "¡cambio!" entre uno y otro:
   - **Te copia**: ella te copia todo, como al principio. Es para jugar libre.
-  - **Copiala**: ella hace una pose clara (brazos en cruz, manos arriba, una mano arriba con la cabeza inclinada, mirar a
-    un costado, la boca bien abierta) y la persona tiene que copiarla; sobre el cuerpo de ella un círculo se llena
+  - **Copiala**: ella hace una pose clara (cabeza de costado, manos arriba, una mano arriba con la cabeza inclinada,
+    mirar a un costado, la boca bien abierta; los brazos en cruz se sacaron porque no entran en la cámara vertical) y la persona tiene que copiarla; sobre el cuerpo de ella un círculo se llena
     mientras la sostiene. Si sale, "¡Eso!"; si no, "Casi. Seguimos.": no hay castigo.
 - **Final**: "¡Último! Los tres." tiesme: "Brazos en V. Yo giro." La persona pone los brazos, ella gira sola, la sombra
   en la pared forma **el águila que nunca salía**. Aplausos, reverencia, telón.
+- **El águila y el medidor** (17/11): la figura es una V alta, con los brazos derechos, como la hace cualquiera cuando
+  le dicen "brazos arriba, abiertos en V". En el ensayo el medidor muestra solo los brazos de la persona: llega al
+  100 % y la figura igual no sale. Lo que falta es el giro, que es de ella; eso es lo que se revela en la tercera
+  estatua y lo que cierra el final entre los tres.
 - **Lo que tiene que quedar** (sin decirlo): al principio ella copiaba sin elegir; ahora copiarse es un juego entre
   iguales, y la figura sale cuando cada uno pone lo suyo.
 - Dura ~50 s. Textos provisorios. Lo que ya se probó y no quedó: elegir con botones, el críptico del nombre del número,

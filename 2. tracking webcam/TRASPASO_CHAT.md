@@ -1,7 +1,19 @@
 # Traspaso — estado actual (SPOT CABINA · tracking de tiesme)
-Actualizado: 19/10/2026 (v12). Lo primero que lee un chat nuevo (junto con `FICHA_PROBLEMAS.md`).
+Actualizado: 22/11/2026 (v15). Lo primero que lee un chat nuevo (junto con `FICHA_PROBLEMAS.md`).
 
 ## Dónde estamos
+- **22/11: v15 "menos retraso"** (Agustín, probando la cabina: "los movimientos van demasiado lagueados, tarda en
+  reaccionar cuando yo me muevo"). v14 archivada en `_versiones/v14`. **Cambio 18**: cuerpo, manos y cara se detectan a la
+  vez (de tomar el cuadro a tener el resultado: 48 → 19–26 ms en el panel de Claude). **Cambio 19**: los filtros reaccionan
+  antes (retraso de los brazos en su grabación en vivo a 12 detecciones/s: 179 → 108 ms; costo: más saltos en la pose de
+  manos en la nuca, 19 → 28). El panel H ahora muestra `retraso: cámara N + detección N ms`. Todo pasado a la cabina
+  (v0.5.2). Detalle y números: HISTORIAL "Cambios v15"; cómo se mide: TECNICO. **Esperando que Agustín**: (1) pase Chrome
+  a la placa NVIDIA en Windows (comprobado que corría en la Intel: TECNICO, "Qué placa usa Chrome"), (2) pruebe con la
+  cámara y pase la línea del panel H. **También el 22/11** ("¿por qué anda tan trancada?"): en los videos de sus partidas la
+  cámara de 1080p entrega 20 imágenes/s (9/11 de noche: 15), parejas → es la exposición con poca luz (FICHA GEN-5 y GEN-7): en
+  la notebook falta el ajuste de G HUB "Prioridad: frecuencia de cuadro" o más luz. Propuesto y sin hacer: que el programa
+  le pida a la cámara 30 imágenes/s y exposición corta desde Chrome. Si sigue con retraso: predicción entre detecciones y `?res=720` (HISTORIAL v15).
+  El mismo día pidió **borrar lo que no se usa** y se hizo: qué se borró y qué quedó, en `3. experiencia/LEEME_CABINA.md`, "Estado v0.5.2".
 - **9/11: v14 "más detecciones por segundo"** (Agustín: "pierdo movimientos… repensá el tracking"). Decidido NO rehacer
   de cero (13 versiones medidas, 4 semanas) sino subir la cantidad de detecciones por segundo: cambio 10 apagado, modelo
   completo otra vez, y **cambio 15: cuerpo, manos y cara en tres hilos en paralelo** (14,6 → 30,4 detecciones/s en el

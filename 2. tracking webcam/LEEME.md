@@ -1,4 +1,4 @@
-# Tracking webcam — tiesme (SPOT CABINA) · manual de uso · v12
+# Tracking webcam — tiesme (SPOT CABINA) · manual de uso · v15
 
 Tracking de tren superior con webcam que mueve al personaje **tiesme** en tiempo real, en una tele vertical 9:16.
 Corre en Chrome, con MediaPipe para detectar y three.js para mostrar el FBX. **No necesita internet** (todo en `lib`).
@@ -76,6 +76,12 @@ Medido con ffmpeg a 1920×1080 MJPEG (como la usa Chrome), escena quieta y perso
 - Buena luz de frente, fondo sin mucho ruido, codos visibles, mangas arremangadas.
 - Para que la cintura acompañe tiene que verse la cadera (con la cámara a la altura del pecho: a más de 1,6 m).
 - Dedos: palma o dorso hacia la cámara; de canto se confunden.
+
+- **Si tiesme va atrasada** (v15): abrir el panel (H) y mirar el final de la primera línea, `retraso: cámara N +
+  detección N ms`. Si `detección` pasa de ~50 ms, Chrome está usando la placa de video lenta: en Windows, Configuración →
+  Sistema → Pantalla → Gráficos → agregar Chrome → Opciones → Alto rendimiento, y reiniciar Chrome. Con poca luz la cámara
+  manda menos cuadros por segundo y eso también atrasa. "Suavizado" y "Reacción" del panel cambian cuánto filtra: menos
+  suavizado y más reacción = más rápido y con más temblor.
 
 ## Archivos de esta carpeta
 | Archivo | Qué es |

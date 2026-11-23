@@ -35,6 +35,20 @@ const QS = new URLSearchParams(location.search);
 const SIN = (QS.get('sin') || '').split(',').map(Number), CON = (QS.get('con') || '').split(',').map(Number);
 const APAGADOS = [10, 17]; // 17 = filtros crudos "a lo TD": sin mejora medida y mas saltos; ?con=17 lo prende
 const CAMBIO = n => !SIN.includes(n) && (!APAGADOS.includes(n) || CON.includes(n));
+// tracking v15 (22/11, "los movimientos van lagueados, tarda en reaccionar"; pasado a la cabina el mismo dia): 18 cuerpo,
+// manos y cara se detectan A LA VEZ sobre el mismo cuadro (manos y cara se ubican con el cuerpo del cuadro anterior) y el
+// cuerpo se usa apenas llega · 19 los filtros se enteran antes de que arranco un movimiento. ?sin=18,19 los apaga.
+// Para probar valores sin tocar el codigo: ?f=corteVel,etapa2,suavizado,reaccion,corteVelTorso (ej. ?f=4,3,0.6,0.8,2).
+const FX = (QS.get('f') || '').split(',').map(Number);
+// Los filtros (One Euro) se abren segun la VELOCIDAD con que te moves; esa velocidad tambien se filtra, y con un corte de
+// 1 Hz tardaba ~150-300 ms en "enterarse" de que habias arrancado: ese era el retraso al empezar cada movimiento.
+// Va por parte: brazos, manos y dedos con D_CUT; cabeza, pecho y cadera con D_CUT_T, mas bajo, porque ahi el mismo valor
+// se notaba como temblor con la persona quieta (medido en B2-07 y B2-08: la cabeza pasaba de 0 a 0,5-0,7 grados por cuadro).
+const D_CUT = FX[0] || (CAMBIO(19) ? 4 : 1), D_CUT_T = FX[4] || (CAMBIO(19) ? 2 : 1);
+const RAPIDO_F3 = /^(E|P|T|S|m)(left|right)/, RAPIDO_HUESO = /(arm|hand)/; // que filtros llevan D_CUT (el resto, D_CUT_T)
+// Segunda etapa (por hueso, en cada dibujo): corte minimo = S2 x el de la primera. Solo tiene que unir una deteccion con
+// la siguiente; con 2 (1 Hz) sumaba otro retraso encima del de la primera etapa.
+const S2 = FX[1] || (CAMBIO(19) ? 3 : 2);
 const MODEL_URL = '../1. tiesme modelo/tiesme_test01.fbx';
 const TEX_DIR = '../1. tiesme modelo/texturas/';
 // MediaPipe local (sin internet): mismos archivos que antes venian del CDN, ver lib/ORIGEN.txt
@@ -103,7 +117,8 @@ const opt = {
   vertical: true, lean: true, nearCam: true,
   mirror: true, head: true, chest: true, arms: true, fingers: true, move: false, face: true, voice: false, mapPos: true,
   // cambio 17 del tracking v14 ("a lo TouchDesigner"): menos suavizado y mas reaccion
-  smooth: CAMBIO(17) ? 0.4 : 0.7, react: CAMBIO(17) ? 0.8 : 0.5, moveGain: 1.0, voiceThr: 6,
+  // v15 (cambio 19): suavizado 0,7 -> 0,6 y reaccion 0,5 -> 0,8 (medido con filtros_sim.js: ver HISTORIAL v15)
+  smooth: FX[2] || (CAMBIO(17) ? 0.4 : CAMBIO(19) ? 0.6 : 0.7), react: FX[3] || (CAMBIO(17) || CAMBIO(19) ? 0.8 : 0.5), moveGain: 1.0, voiceThr: 6,
 };
 
 // ---------- Utilidades ----------
@@ -132,7 +147,7 @@ class QuatFilter {
     if (!this.q) return (this.q = t.clone());
     const s = (this.q.x * t.x + this.q.y * t.y + this.q.z * t.z + this.q.w * t.w) < 0 ? -1 : 1;
     const x = [t.x * s, t.y * s, t.z * s, t.w * s], c = [this.q.x, this.q.y, this.q.z, this.q.w];
-    const ad = lpA(dt, 1);
+    const ad = lpA(dt, this.dc ?? 1);
     for (let i = 0; i < 4; i++) this.d[i] += ad * ((x[i] - c[i]) / dt - this.d[i]);
     const a = lpA(dt, minCutoff + beta * Math.hypot(...this.d));
     const prev = this.q.clone();
@@ -150,12 +165,12 @@ class VecFilter {
     // un salto imposible (mas rapido que maxSpeed) se ignora hasta 2 detecciones seguidas: es un error de deteccion
     if (maxSpeed && this.spikes < 2 && v.distanceTo(this.x) > maxSpeed * Math.max(dt, 1 / 30)) { this.spikes++; return this.x.clone(); }
     this.spikes = 0;
-    this.d.lerp(v.clone().sub(this.x).divideScalar(dt), lpA(dt, 1));
+    this.d.lerp(v.clone().sub(this.x).divideScalar(dt), lpA(dt, this.dc ?? 1));
     return this.x.lerp(v, lpA(dt, minCutoff + beta * this.d.length())).clone();
   }
 }
 const vecFilters = {};
-const F3 = (key, v, dt, mc, beta, maxSpeed) => (vecFilters[key] ??= new VecFilter()).filter(v, dt, mc, beta, maxSpeed);
+const F3 = (key, v, dt, mc, beta, maxSpeed) => (vecFilters[key] ??= Object.assign(new VecFilter(), { dc: RAPIDO_F3.test(key) ? D_CUT : D_CUT_T })).filter(v, dt, mc, beta, maxSpeed);
 const dropF3 = prefix => { for (const k of Object.keys(vecFilters)) if (k.startsWith(prefix)) delete vecFilters[k]; };
 
 // Suavizado: corte minimo (Hz) cuando estas quieto. Reaccion: cuanto se abre el filtro al moverte rapido.
@@ -381,7 +396,7 @@ function rec(name, childName) {
     L0: bone.quaternion.clone(),
     W0: bone.getWorldQuaternion(new Q()),
     P0inv: bone.parent.getWorldQuaternion(new Q()).invert(),
-    f: new QuatFilter(),
+    f: Object.assign(new QuatFilter(), { dc: RAPIDO_HUESO.test(name) ? D_CUT : D_CUT_T }),
     S0: bone.scale.clone(),
   };
   if (childName && B(childName)) r.dir0 = wpos(childName).sub(wpos(name)).normalize();
@@ -1152,7 +1167,7 @@ function updateRig(fd, dt) {
     if (Number.isFinite(entryCap)) maxRate = minRate(maxRate, entryCap);
     let tf = t;
     if (CAB) [tf, maxRate] = CAB.hueso(r, t, dt, maxRate); // >>> CABINA: dial, degradacion y grabador por hueso
-    r.bone.quaternion.copy(r.f.filter(tf, dt, mc * 2 * fm, bDir, maxRate));
+    r.bone.quaternion.copy(r.f.filter(tf, dt, mc * S2 * fm, bDir, maxRate));
     return t;
   };
   const drive = (r, Wt, fm, maxRate) => (r ? set(r, parentW(r).invert().multiply(Wt), fm, maxRate) : null);
@@ -1529,7 +1544,8 @@ const VIDEO_SRC = new URLSearchParams(location.search).get('video'); // ?video=c
 const detStats = { n: 0, L: 0, R: 0, fn: 0, face: 0 };          // cuantas veces se detecto cada cosa (para medir)
 // cambios 10 y 11 del tracking v13 (pasados a la cabina el 9/11): menos trabajo de MediaPipe por cuadro. ?sin=10,11,12 los apaga.
 let poseCanvas = null, lastHands = null;
-const tiempos = { pose: 0, manos: 0, cara: 0 }; // ms de cada parte de la deteccion (los manda el worker)
+let detPnPrev = null; // tracking v15 cambio 18: el cuerpo del cuadro anterior (ubica los recortes de manos y cara)
+const tiempos = { pose: 0, manos: 0, cara: 0, det: 0, cam: 0 }; // ms de cada parte de la deteccion (los manda el worker); det y cam = retraso (v15)
 
 // ---------- Giro de la camara (C920 montada en vertical) ----------
 // Con la camara girada 90° la imagen llega acostada. Se endereza en un canvas ANTES de MediaPipe: los detectores
@@ -1588,7 +1604,7 @@ function setGiro(g, save = true) {
 // tanto sigue dibujando. ?workers=1 un solo hilo; ?sin=13 detectar en el principal (como antes).
 const usarWorker = () => CAMBIO(13) && !ANALIZAR && !LOTE && !DEMO;
 const N_WORKERS = QS.get('workers') === '1' ? 1 : 3;
-const detW = { w: null, ws: [], rol: {}, listos: 0, listo: false, ocupado: {}, tPose: 0, ultimo: null, ultimoId: 0, delegate: '…', cuadros: new Map(), id: 0, ult: { manos: null, cara: null } };
+const detW = { w: null, ws: [], rol: {}, listos: 0, listo: false, ocupado: {}, tPose: 0, ultimo: null, ultimoId: 0, delegate: '…', cuadros: new Map(), id: 0, ult: { manos: null, cara: null }, pnPrev: null, tCam: 0 };
 function pedirCuadro() {
   if (!detW.listo || video.readyState < 2 || video.currentTime === lastVideoTime) return;
   if (detW.ocupado.pose) { if (performance.now() - detW.tPose > 2000) detW.ocupado = { pose: false, manos: false, cara: false }; else return; }
@@ -1596,9 +1612,22 @@ function pedirCuadro() {
   lastVideoTime = video.currentTime; detW.ocupado.pose = true; detW.tPose = performance.now();
   const id = ++detW.id, ts = performance.now(), n = N_WORKERS === 1 ? 1 : 3;
   Promise.all(Array.from({ length: n }, () => createImageBitmap(src))).then(bmps => {
-    detW.cuadros.set(id, { id, ts, vw, vh, f, bmp: { manos: bmps[1] || null, cara: bmps[2] || null }, partes: {}, faltan: 0 });
+    const cu = { id, ts, tCam: detW.tCam, vw, vh, f, bmp: { manos: bmps[1] || null, cara: bmps[2] || null }, partes: {}, faltan: 0 };
+    detW.cuadros.set(id, cu);
     detW.rol.pose.postMessage({ tipo: 'cuadro', id, bitmap: bmps[0], vw, vh, f, ts }, [bmps[0]]);
+    // cambio 18 del tracking v15 (pasado a la cabina el 22/11): manos y cara salen YA, sobre este mismo cuadro, ubicadas con
+    // el cuerpo del cuadro anterior (antes esperaban al cuerpo de este cuadro: el resultado tardaba cuerpo + cara)
+    if (CAMBIO(18) && n === 3) repartir(cu, detW.pnPrev);
   }).catch(err => { console.warn('cuadro al worker', err); detW.ocupado.pose = false; });
+}
+// manda el cuadro a los hilos de manos y cara que esten libres (pn = puntos del cuerpo para ubicar los recortes)
+function repartir(cu, pn) {
+  for (const r of ['manos', 'cara']) {
+    const b = cu.bmp[r]; cu.bmp[r] = null;
+    if (!b) continue;
+    if (pn && !detW.ocupado[r]) { detW.ocupado[r] = true; cu.faltan++; detW.rol[r].postMessage({ tipo: 'cuadro', id: cu.id, bitmap: b, vw: cu.vw, vh: cu.vh, f: cu.f, ts: cu.ts, pn }, [b]); }
+    else b.close();
+  }
 }
 const tomarResultado = () => { const r = detW.ultimo; detW.ultimo = null; return r; };
 function contarDet(out) {
@@ -1606,14 +1635,19 @@ function contarDet(out) {
   if (out.faceNow) { detStats.fn++; if (out.face?.faceLandmarks?.length) detStats.face++; }
 }
 function ensamblar(cu) {
-  detW.cuadros.delete(cu.id);
-  for (const r of ['manos', 'cara']) cu.bmp[r]?.close();
-  if (cu.id <= detW.ultimoId || !cu.partes.pose) return;
+  // (cambio 18: si las manos o la cara de este cuadro todavia no llegaron, el cuadro queda anotado hasta que lleguen,
+  // solo para guardar su resultado; el cuerpo no las espera)
+  if (cu.faltan > 0) cu.armado = true; else detW.cuadros.delete(cu.id);
+  for (const r of ['manos', 'cara']) { cu.bmp[r]?.close(); cu.bmp[r] = null; }
+  if (cu.id <= detW.ultimoId || !cu.partes.pose) return; // llego despues que uno mas nuevo: no volver atras
+  // (cambio 18: la cara puede llegar despues que el cuerpo de su cuadro; vale como "cara nueva" en el cuadro en que se usa)
+  const caraNueva = !!cu.partes.cara || detW.caraNueva; detW.caraNueva = false;
   const manos = cu.partes.manos || detW.ult.manos || { hands: { left: null, right: null }, rois: {} };
   const cara = cu.partes.cara || detW.ult.cara || { face: null, faceRoi: null };
-  const out = { pose: cu.partes.pose, vw: cu.vw, vh: cu.vh, f: cu.f, rois: manos.rois, handsBySide: manos.hands, face: cara.face, faceNow: !!cu.partes.cara, faceRoi: cara.faceRoi };
+  const out = { pose: cu.partes.pose, vw: cu.vw, vh: cu.vh, f: cu.f, rois: manos.rois, handsBySide: manos.hands, face: cara.face, faceNow: caraNueva, faceRoi: cara.faceRoi };
   out.handsN = ['left', 'right'].filter(s => manos.hands[s]).map(s => manos.hands[s].N);
   contarDet(out);
+  out.ts = cu.ts; out.tCam = cu.tCam; // (para medir el retraso: cuando se tomo el cuadro y cuando lo capturo la camara)
   detW.ultimoId = cu.id; detW.ultimo = out;
 }
 function alResultado(m) {
@@ -1629,17 +1663,22 @@ function alResultado(m) {
   if (m.rol === 'pose') {
     cu.partes.pose = m.parte?.pose || null;
     const pn = cu.partes.pose?.landmarks?.[0] || null;
-    for (const r of ['manos', 'cara']) {
-      const b = cu.bmp[r]; cu.bmp[r] = null;
-      if (!b) continue;
-      if (pn && !detW.ocupado[r]) { detW.ocupado[r] = true; cu.faltan++; detW.rol[r].postMessage({ tipo: 'cuadro', id: cu.id, bitmap: b, vw: cu.vw, vh: cu.vh, f: cu.f, ts: cu.ts, pn }, [b]); }
-      else b.close();
-    }
+    detW.pnPrev = pn;
     if (!pn) detW.ult = { manos: null, cara: null };
-    if (cu.faltan === 0) ensamblar(cu);
+    if (CAMBIO(18)) {
+      // cambio 18: el cuerpo se usa apenas llega (las manos y la cara de este cuadro ya estan en camino o ya llegaron;
+      // si alguna tarda mas que el cuerpo, entra en el cuadro siguiente) y se pide el cuadro que sigue sin esperar al dibujo
+      ensamblar(cu);
+      pedirCuadro();
+    } else {
+      repartir(cu, pn);
+      if (cu.faltan === 0) ensamblar(cu);
+    }
   } else {
-    if (m.parte) { cu.partes[m.rol] = m.parte; detW.ult[m.rol] = m.parte; }
-    if (--cu.faltan === 0) ensamblar(cu);
+    if (m.parte && (detW.pnPrev || !CAMBIO(18))) { cu.partes[m.rol] = m.parte; detW.ult[m.rol] = m.parte; if (m.rol === 'cara') detW.caraNueva = true; }
+    cu.faltan--;
+    if (cu.armado) { if (cu.faltan === 0) detW.cuadros.delete(cu.id); }
+    else if (cu.faltan === 0 && !CAMBIO(18)) ensamblar(cu);
   }
 }
 function initWorker() {
@@ -1699,6 +1738,14 @@ async function startCamera() {
   await video.play();
   applyGiro();
 }
+// tracking v15 (cambio 18): avisa apenas la camara entrega un cuadro nuevo, para mandarlo a detectar sin esperar al proximo
+// dibujo (hasta 16 ms antes), y anota cuando lo capturo la camara (el panel H muestra cuanto retraso trae la camara sola)
+function alCuadroDeCamara(_, meta) {
+  detW.tCam = meta?.captureTime ?? 0;
+  if (detW.w && CAMBIO(18) && !paused) pedirCuadro();
+  video.requestVideoFrameCallback(alCuadroDeCamara);
+}
+if (video.requestVideoFrameCallback) video.requestVideoFrameCallback(alCuadroDeCamara);
 
 // Recorte cuadrado (en pixeles de la camara) con un poco de suavizado para que no tiemble.
 function smoothRoi(key, cx, cy, size, vw, vh) {
@@ -1742,7 +1789,10 @@ function detect() {
   }
   const pose = poseLm.detectForVideo(poseSrc, ts);
   const pn = pose.landmarks?.[0];
-  const P = i => ({ x: pn[i].x * vw, y: pn[i].y * vh, v: pn[i].visibility ?? 1 });
+  // tracking v15 (cambio 18): igual que en los hilos, los recortes de manos y cara se ubican con el cuerpo del cuadro ANTERIOR
+  const pnR = CAMBIO(18) ? detPnPrev : pn;
+  detPnPrev = pn || null;
+  const P = i => ({ x: pnR[i].x * vw, y: pnR[i].y * vh, v: pnR[i].visibility ?? 1 });
   const out = { pose, vw, vh, f, rois: {} };
   const kpx = f / focal(1280); // los minimos de los recortes estan pensados para 1280x720
 
@@ -1750,7 +1800,7 @@ function detect() {
   const faceNow = (detN++ % 2 === 0) || !lastFace;
   if (faceNow) {
     lastFace = null; lastFaceRoi = null;
-    if (pn && P(0).v > 0.4) {
+    if (pn && pnR && P(0).v > 0.4) {
       const eL = P(7), eR = P(8), sL = P(11), sR = P(12), n = P(0);
       const ear = Math.hypot(eL.x - eR.x, eL.y - eR.y), sw = Math.hypot(sL.x - sR.x, sL.y - sR.y);
       const size = Math.max(ear * 2.6, sw * 0.9, 96 * kpx);
@@ -1767,7 +1817,7 @@ function detect() {
   // medio vale la ultima deteccion
   const handsNow = !CAMBIO(10) || !faceNow || !lastHands;
   if (pn && !handsNow) { hands.left = lastHands.left; hands.right = lastHands.right; Object.assign(out.rois, lastHands.rois || {}); }
-  if (pn && handsNow) {
+  if (pn && pnR && handsNow) {
     const sw = Math.hypot(P(11).x - P(12).x, P(11).y - P(12).y);
     for (const U of ['left', 'right']) {
       const [wi, ...ki] = HAND_PTS[U], w = P(wi);
@@ -2420,6 +2470,8 @@ function unCuadro(now) {
     raw = demoResults(t, esc);
     raw.faceNow = true;
   } else if (detW.w) { raw = tomarResultado(); pedirCuadro(); } // cambio 13: sin esperar a MediaPipe
+  // tracking v15: cuanto retraso trae cada deteccion: de la camara al programa (cam) y del programa al muñeco (det)
+  if (raw?.ts) { tiempos.det += (performance.now() - raw.ts - tiempos.det) * 0.1; const c = raw.ts - raw.tCam; if (raw.tCam && c > 0 && c < 2000) tiempos.cam += (c - tiempos.cam) * 0.1; }
   else raw = detect();
   if (raw) {
     const ddt = clamp((now - lastDetT) / 1000, 1 / 120, 0.2);
@@ -2449,7 +2501,8 @@ function unCuadro(now) {
   frames++;
   if (now - fpsT > 1000) {
     detFps = detCount; detCount = 0;
-    $('fps').textContent = `${frames} fps · tracking ${detFps}`;
+    const ms = k => tiempos[k].toFixed(0);
+    $('fps').textContent = `${frames} fps · tracking ${detFps} · ms: cuerpo ${ms('pose')} manos ${ms('manos')} cara ${ms('cara')}${tiempos.det ? ` · retraso: ${tiempos.cam ? `cámara ${ms('cam')} + ` : ''}detección ${ms('det')} ms` : ''}`;
     frames = 0; fpsT = now;
     if (cara) status.gesto = (cara.calibrada() ? 'Gestos (calibrados): ' : 'Gestos: ') + cara.estado();
     renderStatus();

@@ -1,0 +1,86 @@
+/* MAQUETA DE MUNDOS (22/11): solo la usa mundos_3actos.html, encima de cabina/cabina.css.
+   1) capas de los mundos (frente y telón)  2) textos sobrios en lugar del cartón de circo. */
+
+/* ---------------------------------------------------------------- 1. capas de los mundos */
+#cab svg.mundoSvg { position: absolute; inset: 0; width: 100%; height: 100%; transform: none; display: none; overflow: visible; }
+#cab[data-mundo=espejo] svg.m-espejo, #cab[data-mundo=caja] svg.m-caja,
+#cab[data-mundo=tele] svg.m-tele, #cab[data-mundo=vidriera] svg.m-vidriera { display: block; }
+#mundoFrente { inset: 0; }
+#cab .mundoSvg .roto { opacity: 0; transition: opacity 1s; }
+#cab.mundoRoto .mundoSvg .roto { opacity: 1; }
+
+/* el telón y el marco de la cabina (desde la v0.6, el espejo) no se ven: cada mundo trae los suyos */
+#cabTelon > .izq, #cabTelon > .der, #cabTelon > svg.capa, #cabMarco { display: none; }
+#cabTelon .tela, #cabTelon .tapa, #cabTelon .pers, #cabTelon .arriba, #cabTelon .abajo { transition: transform var(--seg) cubic-bezier(.6,0,.3,1); }
+
+/* espejo: la sábana se levanta desde abajo (rendija), cae al piso (abierto) y sube sola (final) */
+#cabTelon .tela { transform-origin: 0 0; }
+#cabTelon.rendija .tela { transform: scaleY(.86); }
+#cabTelon.abierto .tela { transform: translateY(700px); transition-timing-function: cubic-bezier(.55,0,1,1); }
+/* caja: la tapa se levanta */
+#cabTelon.rendija .tapa { transform: translateY(-64px); }
+#cabTelon.abierto .tapa { transform: translateY(-660px); }
+/* tele: la carta de ajuste se parte al medio */
+#cabTelon.rendija .arriba { transform: translateY(-30px); }
+#cabTelon.rendija .abajo { transform: translateY(30px); }
+#cabTelon.rendija .mitades { animation: mundoRueda .9s steps(2) infinite; }
+@keyframes mundoRueda { 50% { transform: translateY(6px); } }
+#cabTelon.abierto .arriba { transform: translateY(-340px); }
+#cabTelon.abierto .abajo { transform: translateY(340px); }
+#cabTelon .apagado { display: none; }
+#cab.mundoApagando #cabTelon .apagado { display: block; }
+#cab.mundoApagando .tapaA { transform-box: fill-box; transform-origin: top; animation: mundoTapa .35s ease-in both; }
+#cab.mundoApagando .tapaB { transform-box: fill-box; transform-origin: bottom; animation: mundoTapa .35s ease-in both; }
+#cab.mundoApagando .raya { transform-box: fill-box; transform-origin: center; animation: mundoRaya 3s .25s both; }
+@keyframes mundoTapa { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes mundoRaya { 0% { opacity: 1; transform: scale(1, 1); } 15% { opacity: 1; transform: scale(.012, 1.4); } 30% { opacity: 1; transform: scale(.012, 1.4); } 100% { opacity: 0; transform: scale(.006, 1); } }
+/* vidriera: la persiana sube */
+#cabTelon .pers { transition-timing-function: cubic-bezier(.5,.1,.3,1); }
+#cabTelon.rendija .pers { transform: translateY(-80px); }
+#cabTelon.abierto .pers { transform: translateY(-640px); }
+
+/* caja: la llave gira mientras hay cuerda */
+#cab .llave { transform-box: fill-box; transform-origin: center; animation: mundoGira 4s linear infinite; }
+#cab.mundoRoto .llave { animation: none; }
+@keyframes mundoGira { to { transform: rotate(360deg); } }
+/* tele rota: nieve y franjas que se corren */
+.mundoRuido { position: absolute; inset: 0; display: none; opacity: .28; mix-blend-mode: screen; background-size: 160px 160px; image-rendering: pixelated;
+  animation: mundoNieve .3s steps(3) infinite; }
+#cab[data-mundo=tele].mundoRoto .mundoRuido { display: block; }
+@keyframes mundoNieve { 0% { background-position: 0 0; } 33% { background-position: -53px 71px; } 66% { background-position: 37px -29px; } }
+#cab .franjas { animation: mundoFranjas 1.3s steps(4) infinite; }
+@keyframes mundoFranjas { 25% { transform: translateX(-14px); } 50% { transform: translateX(9px); } 75% { transform: translateX(-4px); } }
+
+/* ---------------------------------------------------------------- 2. textos sobrios (sin cartón de circo) */
+#cab { font-family: "Segoe UI", system-ui, sans-serif; }
+#cabCartel { display: none !important; }
+#cabTitulo .logo { font: italic 400 calc(var(--u) * 10) Georgia, "Times New Roman", serif; -webkit-text-stroke: 0; text-shadow: 0 0 calc(var(--u) * 3) rgba(0,0,0,.9); letter-spacing: .02em; }
+#cabTitulo .logo span { color: #ece6d9 !important; animation: none !important; }
+#cabTitulo .sub { color: #b5afa3; font-weight: 300; letter-spacing: .32em; text-transform: uppercase; font-size: calc(var(--u) * 1.5); text-shadow: 0 0 calc(var(--u) * 2) #000; }
+#cabTitulo .pasa { background: none; box-shadow: none; color: #d8d2c5; font-weight: 300; letter-spacing: .22em; font-size: calc(var(--u) * 1.6);
+  border-radius: 0; border-bottom: 1px solid rgba(216,210,197,.4); padding: 0 0 calc(var(--u) * .5); text-shadow: 0 0 calc(var(--u) * 2) #000; }
+#cabIndicador { background: rgba(6,6,8,.72); color: #ece6d9; box-shadow: none; border-radius: 2px; border: 1px solid rgba(255,255,255,.12); }
+#cabIndicador .texto { font-weight: 400; letter-spacing: .02em; }
+#cabIndicador .texto small { color: #c9a25a; letter-spacing: .25em; font-weight: 400; }
+#cabIndicador .texto em { color: #9a958b; font-weight: 400; }
+#cabIndicador .icono { animation: none; filter: grayscale(1) brightness(1.3); }
+#cabEstatua .cartel { font: 400 calc(var(--u) * 6.5) Georgia, serif; color: #f1ece2; -webkit-text-stroke: 0; letter-spacing: .12em; text-shadow: 0 0 calc(var(--u) * 3) rgba(0,0,0,.95); }
+#cabEstatua .timer { background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.5); font-weight: 300; font-size: calc(var(--u) * 5.5); width: calc(var(--u) * 10); height: calc(var(--u) * 10); }
+#cabPuntaje .num { font: 300 calc(var(--u) * 12) Georgia, serif; color: #f1ece2; -webkit-text-stroke: 0; }
+#cabPuntaje .txt { font-weight: 300; letter-spacing: .08em; }
+#cabVineta { left: 7%; right: 7%; bottom: 5%; transition: transform .25s ease, opacity .25s ease; }
+#cabVineta:not(.visible) { opacity: 0; }
+#cabVineta .cara { display: none; }
+#cabVineta .globo, #cabVineta.oscura .globo { background: none; box-shadow: none; border: 0; padding: 0; color: #f1ece2; text-shadow: 0 1px 3px #000, 0 0 calc(var(--u) * 2.5) #000, 0 0 calc(var(--u) * 1) #000; }
+#cabVineta .quien { color: #c9a25a; font-weight: 400; letter-spacing: .3em; font-size: calc(var(--u) * 1.3); }
+#cabVineta .texto { font-weight: 400; font-size: calc(var(--u) * 2.5); line-height: 1.3; }
+#cabVineta.tiesme .globo { text-align: right; font-family: Georgia, serif; font-style: italic; color: #d6e4ff; }
+#cabVineta.tiesme .quien { color: #8fb0e0; letter-spacing: .3em; font-style: normal; font-family: "Segoe UI", system-ui, sans-serif; }
+#cabMedidor { color: #ddd; font-weight: 400; letter-spacing: .18em; text-transform: uppercase; font-size: calc(var(--u) * 1.3); }
+#cabMedidor .barra { height: 2px; background: rgba(255,255,255,.15); border: 0; }
+#cabMedidor i, #cabMedidor.lleno i { background: #c9a25a; }
+#cabCriptico { background: rgba(6,6,8,.8); border: 1px solid rgba(201,162,90,.5); border-radius: 2px; color: #ece6d9; }
+#cabCriptico .pista { font-weight: 400; }
+#cabSelfie .txt { background: none; color: #f1ece2; border: 1px solid rgba(241,236,226,.4); font-weight: 400; }
+#cabBotones .boton .txt { font-weight: 400; letter-spacing: .05em; }
+#cabPuntero { box-shadow: 0 0 0 calc(var(--u) * .3) #c9a25a, 0 0 calc(var(--u) * 2) rgba(255,255,255,.6); }

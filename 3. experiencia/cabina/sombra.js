@@ -95,15 +95,21 @@ export function crearSombra(api, cuerpo, guion) {
 
   // ---------------------------------------------------------------- cuánto encaja (0 a 1)
   const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
-  const COS = Math.cos(45 * DEG);
+  // v0.5.1: los brazos se comparan como SOMBRA: de frente (afuera y arriba), sin la profundidad, que en la pared no se
+  // ve y es lo más ruidoso de la cámara. Antes se comparaba en 3D con 45° de tolerancia lineal y la V no llegaba nunca.
+  // Si el brazo apunta casi todo hacia la cámara (su sombra es corta), no cuenta.
   function encaje() {
-    const d = cuerpo.dirBrazos();
+    const d = cuerpo.dirBrazos(), e = guion.ensayo || {};
+    const bien = e.tolBien ?? 15, nada = e.tolNada ?? 50;
     let suma = 0, n = 0;
     for (const lado of ['brazoIzq', 'brazoDer']) for (const s of ['brazo', 'ante']) {
       const a = d[lado]?.[s], b = fig.pose[lado]?.[s];
       if (!a || !b) continue;
-      const cos = new V3(...a).normalize().dot(new V3(...b).normalize());
-      suma += clamp((cos - COS) / (1 - COS)); n++;
+      n++;
+      const la = Math.hypot(a[0], a[1]), lb = Math.hypot(b[0], b[1]);
+      if (la < 0.4 * Math.hypot(...a) || !lb) continue; // sombra corta: el brazo va hacia la cámara
+      const cos = clamp((a[0] * b[0] + a[1] * b[1]) / (la * lb), -1, 1), grados = Math.acos(cos) / DEG;
+      suma += clamp((nada - grados) / (nada - bien));
     }
     const brazos = n ? suma / n : 0;
     const giro = clamp(1 - Math.abs(cuerpo.giro() - (fig.giro || 0)) / 40);

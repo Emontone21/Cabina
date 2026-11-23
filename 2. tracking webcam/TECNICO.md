@@ -71,7 +71,26 @@ el mismo hilo que el dibujo, tiesme se mueve a la velocidad de la detección. Co
 cuadro (−20 %). En vivo en la notebook de Agustín daba ~8 cuadros/s (120 ms por cuadro, 3× más lento que acá): revisar qué
 GPU usa Chrome (`chrome://gpu` → GL_RENDERER; Windows → Configuración de gráficos → Chrome → Alto rendimiento) y que el
 panel diga "MediaPipe: listo (otro hilo, GPU…)". Hecho el mismo día: **MediaPipe en un Web Worker** (cambio 13, arriba).
+
+**Retraso: de dónde sale y cómo se mide** (v15, 22/11). Entre que te movés y que tiesme se mueve hay cuatro tramos:
+1. **La cámara** (exposición, USB, decodificado): suele ser 60–130 ms y no depende del programa. El panel H lo muestra como
+   `retraso: cámara N` (lo da Chrome por cada cuadro; con un video de prueba no aparece).
+2. **La detección** (desde que se toma el cuadro hasta que el resultado llega al muñeco): `detección N ms` en el panel H.
+   Con el cambio 18 es lo que tarda el hilo más lento, no la suma. Depende de la placa de video.
+3. **Cada cuánto se detecta**: entre una detección y la siguiente tiesme sigue con lo último (a 12 por segundo son ~40 ms
+   de atraso promedio; a 30, ~17).
+4. **Los filtros** (suavizado). Se mide sin navegador con `filtros_sim.js` (abajo).
+
+**Qué placa usa Chrome** (comprobado el 22/11 en la notebook de Agustín, RTX 4050 + Intel): con Chrome abierto,
+`nvidia-smi` no listaba ningún `chrome.exe` y no había preferencia guardada en Windows → Chrome corría todo en la placa
+Intel integrada (por eso cuerpo 39 ms y cara 29 ms; el panel de Claude, que sí usa la NVIDIA, da cuerpo ~22). Se cambia en
+Windows: Configuración → Sistema → Pantalla → Gráficos → agregar Chrome → Opciones → **Alto rendimiento**, y reiniciar
+Chrome. Para comprobarlo: `nvidia-smi` tiene que listar `chrome.exe`, y en el panel H tienen que bajar los ms de `cuerpo`.
+
 | `res=720` | cámara a 1280×720 (por defecto 1080) |
+| `sin=18,19` | v15 (22/11, retraso): 18 = cuerpo, manos y cara se detectan **a la vez** sobre el mismo cuadro (manos y cara se ubican con el cuerpo del cuadro anterior), el cuerpo se usa apenas llega y el cuadro siguiente se pide sin esperar al dibujo · 19 = los filtros reaccionan antes al arrancar un movimiento (corte de la velocidad 1 → 4 Hz en brazos y manos y 1 → 2 Hz en cabeza y torso; segunda etapa ×2 → ×3; suavizado 0,7 → 0,6; reacción 0,5 → 0,8). |
+| `f=4,3,0.6,0.8,2` | v15: prueba valores del cambio 19 sin tocar el código: corte de la velocidad de brazos y manos (Hz), multiplicador de la segunda etapa, suavizado, reacción, corte de la velocidad de cabeza y torso (Hz). Lo que se omite queda por defecto. |
+| `cada=2`, `hasta=8` | v15, solo en el análisis: `cada=2` detecta un cuadro sí y uno no (imita 15 detecciones por segundo en vivo; `cada=3`, 10); `hasta=8` analiza solo los primeros 8 s del clip. |
 | `giro=90` | fuerza el giro de la imagen sin guardarlo. **Desde el 9/11 el giro por defecto es 90°** (cámara montada en vertical; la zona útil es toda la imagen); `giro=0` vuelve a la horizontal. Lo guardado con la tecla O manda sobre el defecto. |
 
 ## Herramientas (`_herramientas/`, se corren con node o bash)
@@ -82,6 +101,8 @@ panel diga "MediaPipe: listo (otro hilo, GPU…)". Hecho el mismo día: **MediaP
 | `brazos.js` | v12: `node brazos.js <analisis_vN> [<otro>]`: codo alto y giro de codo (tuyo vs tiesme), segundos con el brazo de tiesme "quedado arriba", saltos de mano, aplauso (distancia entre palmas) y nuca (palma detrás de la cabeza). `--linea <clip>`: línea de tiempo cada 0,5 s. Necesita registros v12 (campo `t3`). |
 | `cruzados.js` | v13: `node cruzados.js <analisis_vN | x.jsonl> [<otro>] [--todos] [--linea]`: en los cuadros con TUS brazos cruzados, altura de antebrazos y codos (tuya y de tiesme), % de cuadros con un brazo de tiesme estirado (< 30°), doblez del codo y distancia entre sus brazos. Los registros v13 traen además `etapas` (por lado: alcance que pide la muñeca después de mapeo, cerca de la cámara, choque, cabeza, velocidad y cruce; 1,0 = brazo estirado del todo). |
 | `movimiento.js` | v14: `node movimiento.js <x.jsonl | analisis_vN> [--linea]`: detecciones/s, % de cuadros con cuerpo y con cada mano, y por brazo cuánto de tu movimiento llega a tiesme (velocidad de su mano / velocidad de tu muñeca, en anchos de hombro) y con qué retraso. Sirve para registros en vivo (K) y de análisis. |
+| `filtros_sim.js` | v15: `node filtros_sim.js <x.jsonl ...> [--cada=2]`: pasa TU movimiento grabado (los puntos del cuerpo de un registro, de análisis o en vivo) por una copia de los filtros con varios ajustes y dice, para cada uno, el **retraso** mientras te movés y el **temblor** mientras estás quieto. No abre el navegador: sirve para elegir valores en segundos. Los ajustes a comparar están arriba en el archivo (`AJUSTES`). |
+| `retraso.js` | v15: `node retraso.js <x.jsonl | analisis_vN>`: retraso y arranque por tramo de brazo comparando el ángulo tuyo con el de tiesme. **Poco confiable** en clips con brazos arriba de la cabeza o cruzados (el mapeo cambia el ángulo y la medición se confunde): para elegir filtros usar `filtros_sim.js`. |
 | `cruce_b1.js`, `cara_b1.js` | v12, solo batería 1: orden de los antebrazos en B1-04 (verdad mirada en el video) y distancia de las palmas a la cara por tramo en B1-03. |
 | `hoja.js` | `node hoja.js <carpeta analisis_vN> [columnas]`: hoja de contacto con las fotos del análisis (ffmpeg). |
 | `video.js` | `node video.js <carpeta analisis_vN_comparado>`: une las fotos por cuadro en `<clip>_comparado.mp4` (cámara con puntos \| tiesme, 30 cuadros/s, sincronizado) y borra esas fotos. Correrlo **cuando el lote terminó** (si no, corta el clip que está a medias). Es lo que el usuario usa para opinar (en vez de OBS). |

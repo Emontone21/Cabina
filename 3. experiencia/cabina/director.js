@@ -286,25 +286,28 @@ export function crearDirector(api) {
     return { ok, t: ok ? Math.max(0, tHecho - finFrase) : null };
   }
   // un intento de la figura: mide el encaje y devuelve el mejor
-  async function intentoFigura(seg, { hastaSalir = false } = {}) {
+  // v0.5.1: soloBrazos = el medidor muestra solo lo tuyo (los brazos). En el ensayo llegás al 100 % y la figura igual no
+  // sale: falta lo de ella (el giro). Antes mostraba el total, que sin el giro no pasaba del 60 %.
+  const medir = (e, soloBrazos) => soloBrazos ? pantalla.medidor(e.brazos, `brazos ${Math.round(e.brazos * 100)}%`) : pantalla.medidor(e.total, `encaje ${Math.round(e.total * 100)}%`);
+  async function intentoFigura(seg, { hastaSalir = false, soloBrazos = false } = {}) {
     let mejor = 0, sostenido = 0;
     const salio = await hasta(() => {
       const e = sombra.encaje();
       mejor = Math.max(mejor, e.total);
       sostenido = e.total >= guion.ensayo.encajeOk ? sostenido + dtUlt : 0;
-      pantalla.medidor(e.total, `encaje ${Math.round(e.total * 100)}%`);
+      medir(e, soloBrazos);
       return hastaSalir && sostenido > 0.8;
     }, seg);
     return { mejor, salio: salio && hastaSalir };
   }
   function medidorEnVivo(cond) { lanzar(async () => { await hasta(() => { if (!cond()) return true; const e = sombra.encaje(); pantalla.medidor(e.total, `encaje ${Math.round(e.total * 100)}%`); return false; }); }); }
   // la cuenta de la estatua (devuelve cuánto se movió)
-  async function cuentaEstatua(seg, { alSegundo } = {}) {
+  async function cuentaEstatua(seg, { alSegundo, soloBrazos = false } = {}) {
     let movido = 0;
     for (let k = Math.ceil(seg); k > 0; k--) {
       pantalla.estatua('¡ESTATUA!', k); audio.fx('tic');
       if (alSegundo) alSegundo(Math.ceil(seg) - k);
-      await hasta(() => { if (!S.quieto) movido += dtUlt; const e = sombra.encaje(); pantalla.medidor(e.total, `encaje ${Math.round(e.total * 100)}%`); return false; }, 1);
+      await hasta(() => { if (!S.quieto) movido += dtUlt; medir(sombra.encaje(), soloBrazos); return false; }, 1);
     }
     pantalla.estatua(null, null);
     return movido;
@@ -407,12 +410,12 @@ export function crearDirector(api) {
         pantalla.indicador({ encabezado: `Ensayo ${n + 1}`, icono: '🦅', texto: f.instruccion });
         await hablar('R2-pose');
         audio.seguirMusica();
-        await intentoFigura(e.musicaAntes);
+        await intentoFigura(e.musicaAntes, { soloBrazos: true });
         audio.cortarMusica(); audio.fx('estatua');
         decir('R2-estatua');
-        const movido = await cuentaEstatua(e.estatua);
+        const movido = await cuentaEstatua(e.estatua, { soloBrazos: true });
         const enc = sombra.encaje();
-        datos.estatuas.push({ quieto: movido < 0.5, encaje: +enc.total.toFixed(2) });
+        datos.estatuas.push({ quieto: movido < 0.5, encaje: +enc.total.toFixed(2), brazos: +enc.brazos.toFixed(2) });
         anotar(`estatua ${n + 1}: ${movido < 0.5 ? 'quieto' : 'se movió'} · encaje ${Math.round(enc.total * 100)}% (brazos ${Math.round(enc.brazos * 100)}%)`);
         pantalla.indicador(null);
         audio.fx('mal', { vol: 0.5 });
@@ -435,7 +438,7 @@ export function crearDirector(api) {
       pantalla.indicador({ encabezado: 'Ensayo 3', icono: '🦅', texto: f.instruccion });
       await hablar('R2-pose');
       audio.seguirMusica();
-      await intentoFigura(e.musicaAntes);
+      await intentoFigura(e.musicaAntes, { soloBrazos: true }); // (en la cuenta de la estatua ya muestra el total: ella gira y sube)
       audio.cortarMusica(); audio.fx('estatua');
       decir('R2-estatua');
       pantalla.indicador(null);

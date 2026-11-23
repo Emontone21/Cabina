@@ -1,74 +1,78 @@
 /* Capas de la cabina encima de la imagen 9:16. --u = 1% del alto de la imagen (lo pone pantalla.js), así todo escala
-   igual en el monitor y en la tele. Material provisorio (cartón): emojis, colores planos, fuentes del sistema. */
+   igual en el monitor y en la tele.
+   v0.6 "EL ESPEJO" (22/11): estética oscura y sobria para la proyección en la caja negra. Sin cartón de circo: letra fina,
+   subtítulos en lugar de globos, sin cartel del teatro, íconos de línea. Paleta: blanco hueso #f1ece2, dorado viejo
+   #c9a25a (Richie, consignas), azul pálido #d6e4ff (la voz de ella). La copia de la v0.5.2 está en _versiones. */
 #cab { position: absolute; pointer-events: none; overflow: hidden; z-index: 5; --u: 7px;
-  font-family: "Arial Rounded MT Bold", "Segoe UI", system-ui, sans-serif; }
+  font-family: "Segoe UI", system-ui, sans-serif; color: #f1ece2; }
 #cab > * { position: absolute; }
 #cabHilos, #cabRuido { inset: 0; width: 100%; height: 100%; }
 #cabRuido { mix-blend-mode: normal; }
+.ic { width: 1em; height: 1em; display: block; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
 
-/* ---- título de la Espera ---- */
+/* ---- el espejo: marco delante de ella (con las grietas de la revelación) y la sábana (el telón) ---- */
+#cabMarco, #cabTelon { inset: 0; }
+#cab .capa { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+#cabMarco .grietas { opacity: 0; transition: opacity 1s; }
+#cab.espejoRoto #cabMarco .grietas { opacity: 1; }
+#cabTelon { --seg: 1.6s; }
+#cabTelon .tela { transform-origin: 0 0; transition: transform var(--seg) cubic-bezier(.6,0,.3,1); }
+#cabTelon.rendija .tela { transform: scaleY(.86); }                 /* se levanta desde abajo, como si la corrieran */
+#cabTelon.abierto .tela { transform: translateY(700px); transition-timing-function: cubic-bezier(.55,0,1,1); } /* cae */
+
+/* ---- título de la Espera (sobre la sábana) ---- */
 #cabTitulo { inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--u) * 2);
   opacity: 0; transition: opacity .6s ease; }
 #cabTitulo.visible { opacity: 1; }
-#cabTitulo .logo { font-size: calc(var(--u) * 13); font-weight: 900; letter-spacing: calc(var(--u) * .2);
-  text-shadow: 0 calc(var(--u) * .6) 0 rgba(0,0,0,.18); -webkit-text-stroke: calc(var(--u) * .35) #fff; paint-order: stroke fill; }
-#cabTitulo .logo span { display: inline-block; animation: salto 1.6s ease-in-out infinite; }
-#cabTitulo .sub { font-size: calc(var(--u) * 3.2); color: #3a6ea5; font-weight: 700; }
-#cabTitulo .pasa { margin-top: calc(var(--u) * 14); font-size: calc(var(--u) * 2.6); color: #fff; background: #4cc9f0;
-  padding: calc(var(--u) * 1) calc(var(--u) * 3); border-radius: calc(var(--u) * 4); animation: titila 1.4s ease-in-out infinite;
-  box-shadow: 0 calc(var(--u) * .5) 0 #2a9dc4; }
-@keyframes salto { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(calc(var(--u) * -1.6)) } }
+#cabTitulo .logo { font: italic 400 calc(var(--u) * 10) Georgia, "Times New Roman", serif; color: #ece6d9; letter-spacing: .02em;
+  text-shadow: 0 0 calc(var(--u) * 3) rgba(0,0,0,.9); }
+#cabTitulo .sub { color: #b5afa3; font-weight: 300; letter-spacing: .32em; text-transform: uppercase; font-size: calc(var(--u) * 1.5);
+  text-shadow: 0 0 calc(var(--u) * 2) #000; }
+#cabTitulo .pasa { margin-top: calc(var(--u) * 14); color: #d8d2c5; font-weight: 300; letter-spacing: .22em; font-size: calc(var(--u) * 1.6);
+  border-bottom: 1px solid rgba(216,210,197,.4); padding-bottom: calc(var(--u) * .5); text-shadow: 0 0 calc(var(--u) * 2) #000;
+  animation: titila 2.4s ease-in-out infinite; }
 @keyframes titila { 0%, 100% { opacity: 1 } 50% { opacity: .45 } }
 
 /* ---- indicador de consigna (arriba) ---- */
-#cabIndicador { left: 6%; right: 6%; top: 2.5%; display: flex; align-items: center; gap: calc(var(--u) * 1.5);
-  background: rgba(255,255,255,.93); border-radius: calc(var(--u) * 3); padding: calc(var(--u) * 1.2) calc(var(--u) * 2);
-  box-shadow: 0 calc(var(--u) * .5) calc(var(--u) * 1.5) rgba(0,0,0,.25); color: #233; transform: translateY(calc(-100% - var(--u) * 6)); opacity: 0;
-  transition: transform .35s cubic-bezier(.3,1.6,.5,1), opacity .2s; }
+#cabIndicador { left: 7%; right: 7%; top: 3.5%; display: flex; align-items: center; gap: calc(var(--u) * 1.6);
+  background: rgba(6,6,8,.72); border: 1px solid rgba(255,255,255,.12); border-radius: 2px; padding: calc(var(--u) * 1.1) calc(var(--u) * 1.8);
+  color: #ece6d9; transform: translateY(calc(-100% - var(--u) * 6)); opacity: 0; transition: transform .45s cubic-bezier(.2,.8,.3,1), opacity .3s; }
 #cabIndicador.visible { transform: translateY(0); opacity: 1; }
-#cabIndicador .icono { font-size: calc(var(--u) * 6.5); line-height: 1; animation: menea 0.9s ease-in-out infinite; }
-#cabIndicador .texto { font-size: calc(var(--u) * 3.1); font-weight: 800; line-height: 1.15; flex: 1; }
-#cabIndicador .texto small { display: block; font-size: calc(var(--u) * 1.8); color: #e05a7a; text-transform: uppercase; letter-spacing: .06em; }
-#cabIndicador .texto em { display: block; font-size: calc(var(--u) * 1.7); font-style: normal; color: #678; font-weight: 600; }
-#cabIndicador .marca { font-size: calc(var(--u) * 6); font-weight: 900; }
-#cabIndicador .marca.ok { color: #2fb36b; animation: pop .35s ease-out; }
-#cabIndicador .marca.no { color: #e5484d; animation: pop .35s ease-out; }
-@keyframes menea { 0%, 100% { transform: rotate(-10deg) scale(1) } 50% { transform: rotate(10deg) scale(1.1) } }
-@keyframes pop { 0% { transform: scale(.2) } 70% { transform: scale(1.3) } 100% { transform: scale(1) } }
+#cabIndicador .icono { font-size: calc(var(--u) * 4.6); line-height: 1; color: #f1ece2; }
+#cabIndicador .texto { font-size: calc(var(--u) * 2.6); font-weight: 400; line-height: 1.2; flex: 1; }
+#cabIndicador .texto small { display: block; font-size: calc(var(--u) * 1.3); color: #c9a25a; text-transform: uppercase; letter-spacing: .25em; }
+#cabIndicador .texto em { display: block; font-size: calc(var(--u) * 1.6); font-style: normal; color: #9a958b; }
+#cabIndicador .marca { font-size: calc(var(--u) * 4); font-weight: 300; }
+#cabIndicador .marca.ok { color: #e8e2d0; animation: pop .35s ease-out; }
+#cabIndicador .marca.no { color: #b86a6a; animation: pop .35s ease-out; }
+@keyframes pop { 0% { transform: scale(.4); opacity: 0 } 100% { transform: scale(1); opacity: 1 } }
 
 /* ---- ESTATUA + timer (centro) ---- */
-#cabEstatua { left: 0; right: 0; top: 34%; display: none; flex-direction: column; align-items: center; gap: calc(var(--u) * 1); }
+#cabEstatua { left: 0; right: 0; top: 34%; display: none; flex-direction: column; align-items: center; gap: calc(var(--u) * 1.5); }
 #cabEstatua.visible { display: flex; }
-#cabEstatua .cartel { font-size: calc(var(--u) * 8); font-weight: 900; color: #ff3b5c; -webkit-text-stroke: calc(var(--u) * .45) #fff;
-  paint-order: stroke fill; text-shadow: 0 calc(var(--u) * .7) 0 rgba(0,0,0,.25); }
-#cabEstatua .cartel.pop { animation: pop .4s ease-out; }
-#cabEstatua .timer { font-size: calc(var(--u) * 9); font-weight: 900; color: #fff; background: #233; width: calc(var(--u) * 14);
-  height: calc(var(--u) * 14); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: calc(var(--u) * .6) solid #fff; }
+#cabEstatua .cartel { font: 400 calc(var(--u) * 6.5) Georgia, serif; color: #f1ece2; letter-spacing: .12em; text-shadow: 0 0 calc(var(--u) * 3) rgba(0,0,0,.95); }
+#cabEstatua .cartel.pop { animation: pop .5s ease-out; }
+#cabEstatua .timer { font-size: calc(var(--u) * 5.5); font-weight: 300; color: #f1ece2; background: rgba(0,0,0,.35); width: calc(var(--u) * 10);
+  height: calc(var(--u) * 10); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,.5); }
 #cabEstatua .timer.vacio { display: none; }
-#cabEstatua.roto .timer { background: #000; color: #7f7; font-family: ui-monospace, monospace; }
+#cabEstatua.roto .timer { color: #9fb0c8; font-family: ui-monospace, monospace; }
 
 /* ---- puntaje (3.3) ---- */
-#cabPuntaje { left: 0; right: 0; top: 30%; display: none; flex-direction: column; align-items: center; color: #fff; text-align: center; }
+#cabPuntaje { left: 0; right: 0; top: 30%; display: none; flex-direction: column; align-items: center; text-align: center; text-shadow: 0 0 calc(var(--u) * 3) #000; }
 #cabPuntaje.visible { display: flex; animation: pop .5s ease-out; }
-#cabPuntaje .num { font-size: calc(var(--u) * 14); font-weight: 900; color: #ff3b5c; -webkit-text-stroke: calc(var(--u) * .4) #fff; paint-order: stroke fill; }
-#cabPuntaje .txt { font-size: calc(var(--u) * 3); font-weight: 700; }
+#cabPuntaje .num { font: 300 calc(var(--u) * 12) Georgia, serif; color: #f1ece2; }
+#cabPuntaje .txt { font-size: calc(var(--u) * 2.4); font-weight: 300; letter-spacing: .08em; }
 
-/* ---- viñeta de diálogo (abajo) ---- */
-#cabVineta { left: 4%; right: 4%; bottom: 3%; display: flex; align-items: flex-end; gap: calc(var(--u) * 1.2);
-  transform: translateY(160%); transition: transform .25s ease; }
-#cabVineta.visible { transform: translateY(0); }
-#cabVineta .cara { flex: none; width: calc(var(--u) * 9); height: calc(var(--u) * 9); border-radius: 50%; border: calc(var(--u) * .5) solid #fff;
-  box-shadow: 0 calc(var(--u) * .4) calc(var(--u) * 1) rgba(0,0,0,.3); background: #ffcf4d; display: flex; align-items: center; justify-content: center; font-size: calc(var(--u) * 5.5); }
-#cabVineta.richie .cara::before { content: "🧢"; }
-#cabVineta.tiesme .cara { background: #000 url("../../1. tiesme modelo/estados_cara/full/base.jpg") no-repeat;
-  background-size: calc(var(--u) * 9 * 512 / 150) auto; background-position: calc(var(--u) * 9 * -295 / 150) calc(var(--u) * 9 * -315 / 150); }
-#cabVineta .globo { flex: 1; background: #fff; color: #222; border-radius: calc(var(--u) * 2.2); padding: calc(var(--u) * 1.1) calc(var(--u) * 1.8);
-  box-shadow: 0 calc(var(--u) * .4) calc(var(--u) * 1.2) rgba(0,0,0,.25); min-height: calc(var(--u) * 6); }
-#cabVineta .quien { font-size: calc(var(--u) * 1.7); font-weight: 900; color: #e05a7a; letter-spacing: .08em; }
-#cabVineta.tiesme .quien { color: #5b5bd6; letter-spacing: .02em; }
-#cabVineta .texto { font-size: calc(var(--u) * 2.7); font-weight: 700; line-height: 1.2; min-height: 1.2em; }
-#cabVineta.oscura .globo { background: #0b0b0f; color: #eee; border: 1px solid #333; }
-#cabVineta.oscura .cara { border-color: #333; }
+/* ---- subtítulos (antes viñeta con globo): Richie a la izquierda, ella a la derecha en cursiva ---- */
+#cabVineta { left: 7%; right: 7%; bottom: 5%; display: flex; opacity: 0; transform: translateY(calc(var(--u) * 1.5));
+  transition: opacity .25s ease, transform .25s ease; }
+#cabVineta.visible { opacity: 1; transform: translateY(0); }
+#cabVineta .cara { display: none; }
+#cabVineta .globo { flex: 1; color: #f1ece2; text-shadow: 0 1px 3px #000, 0 0 calc(var(--u) * 2.5) #000, 0 0 calc(var(--u) * 1) #000; }
+#cabVineta .quien { font-size: calc(var(--u) * 1.3); color: #c9a25a; letter-spacing: .3em; text-transform: uppercase; }
+#cabVineta .texto { font-size: calc(var(--u) * 2.5); line-height: 1.3; min-height: 1.3em; }
+#cabVineta.tiesme .globo { text-align: right; font-family: Georgia, serif; font-style: italic; color: #d6e4ff; }
+#cabVineta.tiesme .quien { color: #8fb0e0; font-style: normal; font-family: "Segoe UI", system-ui, sans-serif; }
 
 /* ---- negro, ojo de Richie en la oscuridad, aviso de sonido ---- */
 #cabNegro { inset: 0; background: #000; opacity: 0; }
@@ -78,7 +82,7 @@
 #cabOjo .iris { position: absolute; left: 35%; top: 15%; width: 30%; height: 70%; border-radius: 50%; background: radial-gradient(circle, #000 35%, #3a7d3a 36%, #1d3f1d 70%);
   transition: transform .25s ease; }
 @keyframes parpadeo { 0%, 92%, 100% { transform: scaleY(1) } 95% { transform: scaleY(.05) } }
-#cabSonido { left: 0; right: 0; bottom: 1%; text-align: center; color: rgba(0,0,0,.45); font-size: calc(var(--u) * 1.6); display: none; }
+#cabSonido { left: 0; right: 0; bottom: 1.5%; text-align: center; color: rgba(255,255,255,.4); font-size: calc(var(--u) * 1.4); letter-spacing: .1em; display: none; }
 #cabSonido.visible { display: block; }
 
 /* ---- panel de quien atiende (D) y pausa ---- */
@@ -91,74 +95,55 @@
   border-radius: 6px; display: none; }
 #cabPausa.visible { display: block; }
 
-/* ===================================================================== v0.2: teatrito, puntero, botones, críptico */
+/* ---- foco, cartel, medidor, anillos, botones, puntero, críptico, selfie ---- */
 #cabFoco { inset: 0; opacity: 0; transition: opacity .5s ease; }
-/* telón de terciopelo (delante de tiesme): cerrado en la Espera, se abre al empezar */
-#cabTelon { inset: 0; --seg: 1.6s; }
-#cabTelon > div { position: absolute; top: 0; bottom: 0; width: 52%; transition: transform var(--seg) cubic-bezier(.6,0,.3,1);
-  background: repeating-linear-gradient(90deg, #7a0f1e 0, #b3192f calc(var(--u) * 2.2), #8d1222 calc(var(--u) * 4.4));
-  box-shadow: inset 0 calc(var(--u) * -6) calc(var(--u) * 6) rgba(0,0,0,.45); }
-#cabTelon .izq { left: 0; transform-origin: left; } #cabTelon .der { right: 0; transform-origin: right; }
-#cabTelon.abierto .izq { transform: translateX(-84%) scaleX(.55); }
-#cabTelon.abierto .der { transform: translateX(84%) scaleX(.55); }
-/* cartel del teatro arriba, con lamparitas */
-#cabCartel { left: 12%; right: 12%; top: 1.2%; padding: calc(var(--u) * 1) calc(var(--u) * 1.5); text-align: center; display: none;
-  background: #2a1406; border: calc(var(--u) * .5) solid #e8b04a; border-radius: calc(var(--u) * 1.5); color: #ffe3a3;
-  font-weight: 900; letter-spacing: .08em; font-size: calc(var(--u) * 2.6); text-transform: uppercase;
-  box-shadow: 0 0 0 calc(var(--u) * .5) #2a1406, 0 0 calc(var(--u) * 2) rgba(255,190,80,.35);
-  background-image: radial-gradient(circle, #ffe9a8 30%, transparent 32%); background-size: calc(var(--u) * 2.2) calc(var(--u) * 2.2); background-position: center; }
-#cabCartel .txt { background: #2a1406; display: inline-block; padding: 0 calc(var(--u) * 1); border-radius: calc(var(--u) * .6); }
-#cabCartel.visible { display: block; }
-#cabCartel { transition: opacity .25s, transform .25s; }
-#cab.conIndicador #cabCartel { opacity: 0; transform: translateY(-120%); } /* la tarjeta de consigna va en el mismo lugar */
-#cabCartel.brilla { animation: brilla .5s ease-in-out 6 alternate; }
-@keyframes brilla { to { box-shadow: 0 0 0 calc(var(--u) * .5) #2a1406, 0 0 calc(var(--u) * 6) rgba(255,210,120,.95); color: #fff; } }
+/* el cartel del teatro (con lamparitas) no va en el espejo; queda la función por si se usa para otra cosa */
+#cabCartel { display: none !important; }
 /* medidor de encaje de la figura */
-#cabMedidor { left: 18%; right: 18%; top: 15.5%; /* debajo de la tarjeta de consigna (antes se pisaban) */ display: none; text-align: center; color: #ffe3a3; font-weight: 800; font-size: calc(var(--u) * 1.8); }
+#cabMedidor { left: 18%; right: 18%; top: 15.5%; display: none; text-align: center; color: #ddd; font-weight: 400; letter-spacing: .18em;
+  text-transform: uppercase; font-size: calc(var(--u) * 1.3); text-shadow: 0 0 calc(var(--u) * 1.5) #000; }
 #cabMedidor.visible { display: block; }
-#cabMedidor .barra { margin-top: calc(var(--u) * .5); height: calc(var(--u) * 1.4); background: rgba(0,0,0,.45); border-radius: 99px; overflow: hidden; border: 1px solid rgba(255,227,163,.5); }
-#cabMedidor i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #e8b04a, #ffe9a8); transition: width .15s linear; }
-#cabMedidor.lleno i { background: #7bd88f; }
+#cabMedidor .barra { margin-top: calc(var(--u) * .7); height: 2px; background: rgba(255,255,255,.15); overflow: hidden; }
+#cabMedidor i { display: block; height: 100%; width: 0; background: #c9a25a; transition: width .15s linear; }
+#cabMedidor.lleno i { background: #f1ece2; }
 /* anillo que se llena (consignas sobre el cuerpo y botones) */
-#cabAnillo { width: calc(var(--u) * 11); height: calc(var(--u) * 11); transform: translate(-50%, -50%); display: none; }
+#cabAnillo { width: calc(var(--u) * 10); height: calc(var(--u) * 10); transform: translate(-50%, -50%); display: none; }
 #cabAnillo.visible { display: block; }
-#cabAnillo .icono { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: calc(var(--u) * 5); }
-#cab svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
-#cab svg circle { fill: none; stroke-width: 9; }
-#cab svg .fondo { stroke: rgba(255,255,255,.35); fill: rgba(0,0,0,.25); }
-#cab svg .carga { stroke: #ffd34d; stroke-dasharray: 276.5; stroke-dashoffset: 276.5; stroke-linecap: round; transition: stroke-dashoffset .08s linear; }
-#cabAnillo.ok .carga { stroke: #7bd88f; }
+#cabAnillo .icono, #cabBotones .boton .icono { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: calc(var(--u) * 4.4); color: #f1ece2; }
+#cabAnillo > svg, #cabBotones .boton > svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+#cabAnillo > svg circle, #cabBotones .boton > svg circle { fill: none; stroke-width: 3; }
+#cabAnillo > svg .fondo, #cabBotones .boton > svg .fondo { stroke: rgba(255,255,255,.25); fill: rgba(0,0,0,.4); }
+#cabAnillo > svg .carga, #cabBotones .boton > svg .carga { stroke: #c9a25a; stroke-dasharray: 276.5; stroke-dashoffset: 276.5; stroke-linecap: round; transition: stroke-dashoffset .08s linear; }
+#cabAnillo.ok .carga { stroke: #f1ece2; }
 #cabAnillo.ok { animation: pop .35s ease-out; }
 /* botones grandes para elegir con la mano */
 #cabBotones { left: 6%; right: 6%; bottom: 17%; display: none; justify-content: space-around; gap: calc(var(--u) * 2); pointer-events: auto; flex-wrap: wrap; }
 #cabBotones.visible { display: flex; }
 #cabBotones.medio { bottom: 38%; }
 #cabBotones .boton { position: relative; width: calc(var(--u) * 15); height: calc(var(--u) * 15); cursor: pointer; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; color: #fff; text-align: center; transition: transform .15s; }
-#cabBotones .boton.sobre { transform: scale(1.08); }
-#cabBotones .boton .icono { font-size: calc(var(--u) * 5); line-height: 1; position: relative; }
-#cabBotones .boton .txt { position: relative; font-weight: 900; font-size: calc(var(--u) * 1.8); line-height: 1.1; margin-top: calc(var(--u) * .4);
+  align-items: center; justify-content: center; color: #f1ece2; text-align: center; transition: transform .15s; }
+#cabBotones .boton.sobre { transform: scale(1.06); }
+#cabBotones .boton .icono { position: relative; inset: auto; }
+#cabBotones .boton .txt { position: relative; font-weight: 400; letter-spacing: .05em; font-size: calc(var(--u) * 1.7); line-height: 1.1; margin-top: calc(var(--u) * .4);
   text-shadow: 0 1px 3px rgba(0,0,0,.8); padding: 0 calc(var(--u) * 1); }
 #cabBotones.piezas .boton { width: calc(var(--u) * 12); height: calc(var(--u) * 12); }
-#cabBotones.piezas .boton .txt { font-size: calc(var(--u) * 2.6); }
+#cabBotones.piezas .boton .txt { font-size: calc(var(--u) * 2.4); }
 /* el puntero de la mano */
-#cabPuntero { width: calc(var(--u) * 3); height: calc(var(--u) * 3); margin: calc(var(--u) * -1.5) 0 0 calc(var(--u) * -1.5); border-radius: 50%;
-  background: #fff; box-shadow: 0 0 0 calc(var(--u) * .5) #ff3b5c, 0 0 calc(var(--u) * 2) rgba(255,255,255,.8); display: none; z-index: 3; }
+#cabPuntero { width: calc(var(--u) * 2.4); height: calc(var(--u) * 2.4); margin: calc(var(--u) * -1.2) 0 0 calc(var(--u) * -1.2); border-radius: 50%;
+  background: #f1ece2; box-shadow: 0 0 0 calc(var(--u) * .3) #c9a25a, 0 0 calc(var(--u) * 2) rgba(255,255,255,.6); display: none; z-index: 3; }
 #cabPuntero.visible { display: block; }
 /* el críptico */
-#cabCriptico { left: 6%; right: 6%; top: 15%; display: none; flex-direction: column; align-items: center; gap: calc(var(--u) * 1.5);
-  background: rgba(20,10,4,.82); border: calc(var(--u) * .4) solid #e8b04a; border-radius: calc(var(--u) * 2); padding: calc(var(--u) * 2); color: #ffe3a3; }
+#cabCriptico { left: 7%; right: 7%; top: 15%; display: none; flex-direction: column; align-items: center; gap: calc(var(--u) * 1.5);
+  background: rgba(6,6,8,.8); border: 1px solid rgba(201,162,90,.5); border-radius: 2px; padding: calc(var(--u) * 2); color: #ece6d9; }
 #cabCriptico.visible { display: flex; }
-#cabCriptico .pista { font-size: calc(var(--u) * 2.8); font-weight: 800; text-align: center; }
-#cabCriptico .pista em { display: block; font-style: normal; font-size: calc(var(--u) * 2); color: #fff; margin-top: calc(var(--u) * .8); font-weight: 600; }
+#cabCriptico .pista { font-size: calc(var(--u) * 2.6); font-weight: 400; text-align: center; }
+#cabCriptico .pista em { display: block; font-style: normal; font-size: calc(var(--u) * 1.8); color: #9a958b; margin-top: calc(var(--u) * .8); }
 #cabCriptico .huecos { display: flex; gap: calc(var(--u) * 1); }
-#cabCriptico .huecos span { min-width: calc(var(--u) * 9); padding: calc(var(--u) * .8); text-align: center; border-bottom: calc(var(--u) * .5) solid #e8b04a;
-  font-size: calc(var(--u) * 3.4); font-weight: 900; color: rgba(255,227,163,.35); }
-#cabCriptico .huecos span.lleno { color: #fff; }
+#cabCriptico .huecos span { min-width: calc(var(--u) * 9); padding: calc(var(--u) * .8); text-align: center; border-bottom: 1px solid #c9a25a;
+  font-size: calc(var(--u) * 3.2); font-weight: 300; color: rgba(236,230,217,.3); }
+#cabCriptico .huecos span.lleno { color: #f1ece2; }
 /* selfie */
 #cabSelfie { left: 5%; right: 5%; bottom: 20%; display: none; flex-direction: column; align-items: center; gap: calc(var(--u) * 1); text-align: center; }
 #cabSelfie.visible { display: flex; }
-#cabSelfie .txt { background: #fff; color: #222; font-weight: 900; font-size: calc(var(--u) * 2.8); padding: calc(var(--u) * 1) calc(var(--u) * 2.4); border-radius: 99px; }
-#cabSelfie .arroba { color: #fff; font-weight: 900; font-size: calc(var(--u) * 3.6); text-shadow: 0 2px 6px rgba(0,0,0,.6); }
-#cabTelon.rendija .izq { transform: translateX(-9%); }
-#cabTelon.rendija .der { transform: translateX(9%); }
+#cabSelfie .txt { color: #f1ece2; border: 1px solid rgba(241,236,226,.4); font-weight: 400; font-size: calc(var(--u) * 2.4); padding: calc(var(--u) * 1) calc(var(--u) * 2.4); }
+#cabSelfie .arroba { color: #f1ece2; font-weight: 300; font-size: calc(var(--u) * 3.2); text-shadow: 0 2px 6px rgba(0,0,0,.6); }

@@ -1,95 +1,100 @@
-// Fondo (2D, cartón) y luces. v0.2: un TEATRITO (pared del fondo, piso de tablas, cortinas a los costados, bambalina
-// con lamparitas). El fondo es un canvas que three.js usa como fondo de la escena. Modos de luz:
-// - función: luces cálidas de colores (acto alegre) · ensayo: más tenue, con un círculo de luz en la pared (la sombra)
-// - trabajo: "luz de trabajo" (el ensayo se cortó): todo oscuro con una lamparita colgando, luz dura y fría.
+// Fondo y luces. v0.6 "EL ESPEJO" (22/11): lo que se ve detrás de tiesme es el cuarto reflejado en el espejo (paredes,
+// piso de tablas, una puerta al fondo y una lamparita colgando). El marco del espejo y la sábana van delante de ella
+// (pantalla.js + cabina.css). El fondo es un canvas que three.js usa como fondo de la escena. Modos de luz:
+// - función: la lamparita prendida, luz tibia de costado sobre ella
+// - ensayo: además, un círculo de luz tibia en la pared del fondo, donde cae la sombra (estatuas)
+// - trabajo (revelación en adelante): el espejo "se rompe": puerta entreabierta, lamparita casi apagada, todo frío, y el
+//   vidrio rajado (las grietas están delante de ella: #cab.espejoRoto, en cabina.css)
 // La pared se puede ir a negro y "romper" (glitch). Reemplazar por el fondo 3D de Agustín cuando esté.
+// (Antes, hasta la v0.5.2: un teatrito de circo. Copia en _versiones/cabina_v0.5.2.)
+
+const repetir = (n, f) => Array.from({ length: n }, (_, i) => f(i)).join('');
+
+// el cuarto del espejo, en el cuadro 9:16 (360 × 640). roto = la versión de la revelación
+const cuarto = r => `
+  <defs>
+    <radialGradient id="g1" gradientUnits="userSpaceOnUse" cx="276" cy="118" r="340"><stop offset="0" stop-color="#fff0d2" stop-opacity="${r ? 0.1 : 0.5}"/><stop offset=".3" stop-color="#ffe6b8" stop-opacity="${r ? 0.03 : 0.14}"/><stop offset="1" stop-color="#ffe6b8" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g2" cx="50%" cy="45%" r="75%"><stop offset=".5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".7"/></radialGradient>
+  </defs>
+  <rect width="360" height="640" fill="#0b0e13"/>
+  <polygon points="0,0 360,0 292,70 68,70" fill="#07090c"/>
+  <polygon points="0,0 68,70 68,500 0,640" fill="#0c1016"/>
+  <polygon points="360,0 292,70 292,500 360,640" fill="#0a0d12"/>
+  <rect x="68" y="70" width="224" height="430" fill="#10151c"/>
+  <polygon points="0,640 68,500 292,500 360,640" fill="#0e1116"/>
+  <g stroke="#161b22">${repetir(9, i => `<line x1="${68 + i * 28}" y1="500" x2="${i * 45}" y2="640"/>`)}</g>
+  <g stroke="#1d232c" fill="none"><polyline points="0,0 68,70 68,500 0,640"/><polyline points="360,0 292,70 292,500 360,640"/><line x1="68" y1="500" x2="292" y2="500"/><line x1="68" y1="70" x2="292" y2="70"/></g>
+  ${r
+    ? '<rect x="92" y="250" width="62" height="250" fill="#000"/><polygon points="92,250 118,262 118,488 92,500" fill="#0d1218" stroke="#1a2029"/>'
+    : '<rect x="92" y="250" width="62" height="250" fill="#0c1117" stroke="#1a2029"/><ellipse cx="146" cy="380" rx="2.5" ry="2.5" fill="#3a3f46"/>'}
+  <polygon points="304,190 340,172 340,262 304,270" fill="#0b0f14" stroke="#1d232c"/>
+  <line x1="276" y1="0" x2="276" y2="106" stroke="#2c2c2c" stroke-width="1.2"/>
+  <rect width="360" height="640" fill="url(#g1)"/>
+  <ellipse cx="276" cy="116" rx="7" ry="9" fill="${r ? '#8d939b' : '#fff4dc'}"/>
+  ${r ? '<rect width="360" height="640" fill="#0b1a2e" opacity=".35"/>' : ''}
+  <rect width="360" height="640" fill="url(#g2)"/>`;
 
 export function crearEscenario(api) {
-  const { THREE, scene, luces } = api;
-  const cv = document.createElement('canvas'); cv.width = 360; cv.height = 640;
+  const { THREE, scene, luces: L } = api;
+  const W = 720, H = 1280;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const g = cv.getContext('2d');
   const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
   scene.background = tex;
 
-  // valores actuales y objetivos (cambian de a poco). oscuro = luz de trabajo; ensayo = luz del ensayo
+  // valores actuales y objetivos (cambian de a poco). oscuro = luz de trabajo (espejo roto); ensayo = luz del ensayo
   const v = { negro: 0, glitch: 0, oscuro: 0, ensayo: 0 }, obj = { ...v }, vel = { negro: 1, glitch: 4, oscuro: 1, ensayo: 1 };
   const ir = (k, valor, seg) => { obj[k] = valor; vel[k] = seg > 0 ? Math.abs(valor - v[k]) / seg || 1 : Infinity; };
 
-  const L = luces, normal = { hemi: L.hemi?.intensity ?? 2.4, key: L.key.intensity, pos: L.key.position.clone(), col: L.key.color.clone() };
-  const oscura = { hemi: 0.16, key: 3.6, pos: new THREE.Vector3(0.9, 2.4, 0.7), col: new THREE.Color(0xdde6ff) };
-  const calida = new THREE.Color(0xffe2b8);
+  // el cuarto se pasa a imagen una sola vez (normal y roto); hasta que esté, el fondo es negro
+  const img = {};
+  let sucio = true;
+  const aImagen = (clave, cuerpo) => {
+    const im = new Image();
+    im.onload = () => { const c = document.createElement('canvas'); c.width = W; c.height = H; c.getContext('2d').drawImage(im, 0, 0, W, H); img[clave] = c; sucio = true; };
+    im.onerror = e => console.warn('[cabina] no se pudo dibujar el fondo', e);
+    im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 360 640">${cuerpo}</svg>`);
+  };
+  aImagen('normal', cuarto(false)); aImagen('roto', cuarto(true));
 
-  let t = 0;
-  const mezcla = (a, b, k) => a.map((x, i) => Math.round(x + (b[i] - x) * k));
-  const rgb = c => `rgb(${c[0]},${c[1]},${c[2]})`;
+  // luz sobre tiesme: tibia, de costado y de arriba (la lamparita); rota: fría y apagada
+  const NORMAL = { hemi: 0.95, hcol: new THREE.Color(0xc8d2e6), key: 2.6, col: new THREE.Color(0xffe4bc) };
+  const ROTA = { hemi: 0.22, hcol: new THREE.Color(0x8090b0), key: 3.0, col: new THREE.Color(0xc8d6ff) };
+  L.key.position.set(1.3, 2.0, 1.3);
+
+  const cab = document.getElementById('cab');
+  let rotoAntes = null, antes = '';
   function dibujar() {
-    const W = cv.width, H = cv.height, k = v.oscuro, e = v.ensayo;
-    // pared del fondo
-    const top = mezcla(mezcla([120, 52, 40], [62, 30, 28], e), [10, 10, 14], k), bot = mezcla(mezcla([196, 112, 70], [110, 60, 44], e), [18, 18, 22], k);
-    const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, rgb(top)); gr.addColorStop(0.8, rgb(bot)); g.fillStyle = gr; g.fillRect(0, 0, W, H);
-    // listones de la pared
-    g.fillStyle = `rgba(0,0,0,${0.08 + 0.1 * k})`; for (let x = 0; x < W; x += 30) g.fillRect(x, 0, 2, H * 0.86);
-    // círculo de luz en la pared (ensayo): donde cae la sombra
-    if (e > 0.01 && k < 0.99) {
-      const rg = g.createRadialGradient(W * 0.5, H * 0.38, 10, W * 0.5, H * 0.38, W * 0.62);
-      rg.addColorStop(0, `rgba(255,236,190,${0.55 * e * (1 - k)})`); rg.addColorStop(1, 'rgba(255,236,190,0)');
+    g.globalAlpha = 1; g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
+    if (img.normal) g.drawImage(img.normal, 0, 0);
+    if (img.roto && v.oscuro > 0.001) { g.globalAlpha = v.oscuro; g.drawImage(img.roto, 0, 0); g.globalAlpha = 1; }
+    // círculo de luz en la pared del fondo (ensayo): donde cae la sombra
+    if (v.ensayo > 0.01 && v.oscuro < 0.99) {
+      const rg = g.createRadialGradient(W / 2, H * 0.36, 10, W / 2, H * 0.36, W * 0.62);
+      rg.addColorStop(0, `rgba(255,226,180,${0.28 * v.ensayo * (1 - v.oscuro)})`); rg.addColorStop(1, 'rgba(255,226,180,0)');
       g.fillStyle = rg; g.fillRect(0, 0, W, H);
-    }
-    // luces de colores de la función (se apagan en el ensayo y en la luz de trabajo)
-    const fun = (1 - e) * (1 - k);
-    if (fun > 0.01) for (const [x, c] of [[0.2, '255,90,120'], [0.5, '255,200,90'], [0.8, '90,190,255']]) {
-      const rg = g.createRadialGradient(W * x, H * 0.12, 5, W * x, H * 0.12, W * 0.5);
-      rg.addColorStop(0, `rgba(${c},${0.35 * fun * (0.85 + 0.15 * Math.sin(t * 2 + x * 9))})`); rg.addColorStop(1, `rgba(${c},0)`);
-      g.fillStyle = rg; g.fillRect(0, 0, W, H);
-    }
-    // piso de tablas
-    const py = H * 0.86;
-    g.fillStyle = rgb(mezcla([120, 72, 38], [16, 14, 14], k)); g.fillRect(0, py, W, H - py);
-    g.fillStyle = 'rgba(0,0,0,.25)'; for (let y = py; y < H; y += 14) g.fillRect(0, y, W, 2);
-    // cortinas a los costados
-    for (const [x0, s] of [[0, 1], [W, -1]]) {
-      const cg = g.createLinearGradient(x0, 0, x0 + s * 46, 0);
-      cg.addColorStop(0, rgb(mezcla([90, 10, 22], [20, 4, 8], k))); cg.addColorStop(1, rgb(mezcla([170, 24, 44], [40, 8, 14], k)));
-      g.fillStyle = cg; g.beginPath(); g.moveTo(x0, 0); g.lineTo(x0 + s * 50, 0); g.quadraticCurveTo(x0 + s * 30, H * 0.5, x0 + s * 40, H); g.lineTo(x0, H); g.fill();
-    }
-    // bambalina con lamparitas
-    g.fillStyle = rgb(mezcla([140, 18, 36], [30, 6, 12], k)); g.fillRect(0, 0, W, 34);
-    for (let x = 12; x < W; x += 24) {
-      const on = (1 - k) * (0.6 + 0.4 * (Math.sin(t * 3 + x) > 0 ? 1 : 0.4));
-      g.fillStyle = `rgba(255,226,150,${0.25 + 0.75 * on})`; g.beginPath(); g.arc(x, 38, 4, 0, 6.283); g.fill();
-    }
-    // luz de trabajo: una lamparita colgando
-    if (k > 0.01) {
-      const bx = W * 0.62, by = H * 0.2;
-      g.strokeStyle = `rgba(90,90,90,${k})`; g.lineWidth = 1.5; g.beginPath(); g.moveTo(bx, 0); g.lineTo(bx, by - 8); g.stroke();
-      const rg = g.createRadialGradient(bx, by, 2, bx, by, W * 0.7);
-      rg.addColorStop(0, `rgba(235,240,255,${0.9 * k})`); rg.addColorStop(0.08, `rgba(200,210,235,${0.35 * k})`); rg.addColorStop(1, 'rgba(0,0,0,0)');
-      g.fillStyle = rg; g.fillRect(0, 0, W, H);
-      g.fillStyle = `rgba(255,255,255,${k})`; g.beginPath(); g.arc(bx, by, 6, 0, 6.283); g.fill();
     }
     if (v.glitch > 0.01) {
       const n = Math.round(v.glitch * 8);
-      for (let i = 0; i < n; i++) {
-        const y = Math.random() * H, h = 4 + Math.random() * 40, dx = (Math.random() - 0.5) * 80 * v.glitch;
-        g.drawImage(cv, 0, y, W, h, dx, y, W, h);
-      }
+      for (let i = 0; i < n; i++) { const y = Math.random() * H, h = 8 + Math.random() * 80, dx = (Math.random() - 0.5) * 160 * v.glitch; g.drawImage(cv, 0, y, W, h, dx, y, W, h); }
     }
     if (v.negro > 0.001) { g.fillStyle = `rgba(0,0,0,${v.negro})`; g.fillRect(0, 0, W, H); }
     tex.needsUpdate = true;
   }
 
   function cuadro(dt) {
-    t += dt;
     for (const k of Object.keys(v)) {
       const d = obj[k] - v[k], paso = vel[k] * dt;
       v[k] = Math.abs(d) <= paso ? obj[k] : v[k] + Math.sign(d) * paso;
     }
-    const k = v.oscuro;
-    if (L.hemi) L.hemi.intensity = (normal.hemi * (1 - 0.35 * v.ensayo)) * (1 - k) + oscura.hemi * k;
-    L.key.intensity = normal.key + (oscura.key - normal.key) * k;
-    L.key.position.lerpVectors(normal.pos, oscura.pos, k);
-    L.key.color.copy(normal.col).lerp(calida, 0.35 * (1 - k)).lerp(oscura.col, k);
-    dibujar();
+    const k = v.oscuro, roto = k > 0.5;
+    if (roto !== rotoAntes) { cab?.classList.toggle('espejoRoto', roto); rotoAntes = roto; }
+    if (L.hemi) { L.hemi.intensity = (NORMAL.hemi + (ROTA.hemi - NORMAL.hemi) * k) * (1 - 0.3 * v.ensayo); L.hemi.color.copy(NORMAL.hcol).lerp(ROTA.hcol, k); }
+    L.key.intensity = NORMAL.key + (ROTA.key - NORMAL.key) * k;
+    L.key.color.copy(NORMAL.col).lerp(ROTA.col, k);
+    // el fondo se vuelve a subir a la placa solo si cambió algo
+    const firma = `${v.negro.toFixed(3)}|${k.toFixed(3)}|${v.ensayo.toFixed(3)}`;
+    if (sucio || v.glitch > 0.01 || firma !== antes) { dibujar(); antes = firma; sucio = false; }
   }
 
   return {

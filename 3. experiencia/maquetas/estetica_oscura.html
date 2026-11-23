@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tiesme · estética oscura (maqueta)</title>
+<!-- MAQUETA de la estética oscura de la cabina (22/11/2026). No es la cabina: es un dibujo animado para elegir el diseño.
+     Se abre con doble clic, no necesita servidor ni internet. Las frases son las de guion.js. -->
+<style>
+  @property --aL { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
+  @property --aR { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
+  :root { --fondo: #0b0b0c; --txt: #d9d5cc; --dim: #8b877f; --raya: #26252a; --tibio: #f3dfb4; --frio: #cfe0f2; --oro: #e2b65a; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--fondo); color: var(--txt); font: 300 15px/1.55 "Helvetica Neue", "Segoe UI", Arial, sans-serif; }
+  .pagina { max-width: 1080px; margin: 0 auto; padding: 28px 20px 48px; }
+  h1 { font-weight: 200; font-size: 30px; letter-spacing: .02em; margin: 0 0 4px; }
+  .bajada { color: var(--dim); margin: 0 0 22px; max-width: 62ch; }
+  .cuerpo { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 32px; align-items: start; }
+  .fija { position: sticky; top: 16px; }
+  @media (max-width: 640px) { .cuerpo { grid-template-columns: 1fr; } .fija { position: static; } }
+
+  /* ---------- la "proyección" (entra entera en la ventana) ---------- */
+  .caja { position: relative; height: clamp(380px, calc(100vh - 40px), 760px); aspect-ratio: 9 / 16; background: #000; overflow: hidden; container-type: inline-size; border: 1px solid #1c1c20; }
+  .caja svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .suave { transition: opacity 1.2s ease, transform 1.5s cubic-bezier(.3, .7, .2, 1), fill 1.2s ease; }
+  #guardia { animation: respira 3.6s ease-in-out infinite; transform-origin: 180px 250px; }
+  @keyframes respira { 0%, 100% { transform: scale(.75); } 50% { transform: scale(1.25); } }
+  #foco, #focoFrio { transform-origin: 180px 235px; }
+  .fig .parte { fill: var(--tono); transition: fill 1.2s ease; }
+  .fig .ojo { fill: var(--ojo); transition: fill 1.2s ease; }
+  .fig .brazoI { transform-origin: 149px 449px; transform: rotate(var(--aL)); }
+  .fig .brazoD { transform-origin: 211px 449px; transform: rotate(var(--aR)); }
+  .pose { transition: --aL 1s cubic-bezier(.3, .7, .2, 1), --aR 1s cubic-bezier(.3, .7, .2, 1); }
+  #ella { transition: transform 1.6s cubic-bezier(.3, .7, .2, 1); }
+
+  /* ---------- los textos de la proyección ---------- */
+  .t { position: absolute; left: 8cqw; right: 8cqw; transition: opacity .7s ease, color 1s ease; opacity: 0; }
+  #titulo { top: 20cqw; text-align: center; font-weight: 200; font-size: 6.2cqw; letter-spacing: .32em; color: var(--tibio); }
+  #marca { top: 7cqw; font-size: 3cqw; letter-spacing: .28em; text-transform: lowercase; color: var(--dim); }
+  #consigna { top: 14cqw; text-align: center; font-weight: 200; font-size: 9.5cqw; letter-spacing: .04em; color: var(--tibio); }
+  #barra { position: absolute; left: 30cqw; right: 30cqw; top: 31cqw; height: 1px; background: #3a3832; opacity: 0; transition: opacity .7s ease; }
+  #barra i { display: block; height: 100%; width: 0; background: var(--tibio); transition: width 2.4s linear; }
+  #subR { bottom: 15cqw; font-size: 4cqw; line-height: 1.35; color: var(--tibio); }
+  #subT { bottom: 6cqw; text-align: right; font: italic 400 4.3cqw/1.3 Georgia, "Times New Roman", serif; color: var(--frio); }
+  .caja.clara #subT, .caja.clara #subR, .caja.clara #marca { color: #17181b; }
+  .t.ver, #barra.ver { opacity: 1; }
+
+  /* ---------- la lista de momentos ---------- */
+  .lado h2 { font-weight: 400; font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: var(--dim); margin: 18px 0 6px; }
+  .lado h2:first-child { margin-top: 0; }
+  .momento { display: block; width: 100%; text-align: left; background: none; border: 0; border-top: 1px solid var(--raya); color: var(--dim); font: inherit; padding: 9px 2px; cursor: pointer; }
+  .momento b { font-weight: 400; color: var(--txt); margin-right: 8px; }
+  .momento:hover { color: var(--txt); }
+  .momento.activo { color: var(--tibio); } .momento.activo b { color: var(--tibio); }
+  .momento:focus-visible { outline: 1px solid var(--tibio); outline-offset: 2px; }
+  #detalle { margin: 18px 0 0; padding: 14px 0 0; border-top: 1px solid var(--raya); min-height: 9.5em; }
+  #detalle h3 { font-weight: 300; font-size: 20px; margin: 0 0 6px; color: var(--tibio); }
+  #detalle p { margin: 0 0 8px; max-width: 54ch; }
+  #detalle .porque { color: var(--dim); }
+  .botones { display: flex; gap: 10px; margin: 0 0 18px; }
+  .boton { background: none; border: 1px solid #3a3832; color: var(--txt); font: inherit; padding: 7px 14px; cursor: pointer; }
+  .boton:hover { border-color: var(--tibio); color: var(--tibio); }
+  .reglas { margin-top: 40px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 22px; border-top: 1px solid var(--raya); padding-top: 22px; }
+  .reglas h4 { font-weight: 400; margin: 0 0 4px; }
+  .reglas p { margin: 0; color: var(--dim); }
+  .muestra { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 7px; }
+</style>
+</head>
+<body>
+<div class="pagina">
+  <h1>Una sola luz</h1>
+  <p class="bajada">Maqueta de la estética oscura para la caja. La idea: en toda la experiencia hay una única luz, y lo que cambia es esa luz. Todo lo demás es negro, y en una proyección el negro no existe: lo que no está iluminado desaparece. Ella está dibujada esquemática; en la cabina es tu modelo.</p>
+
+  <div class="cuerpo">
+    <div class="fija">
+      <div class="caja" id="caja">
+        <svg viewBox="0 0 360 640" aria-hidden="true">
+          <defs>
+            <radialGradient id="gTibio"><stop offset="0" stop-color="#fff7e2"/><stop offset=".55" stop-color="#f0d7a2"/><stop offset=".82" stop-color="#c79f5f" stop-opacity=".45"/><stop offset="1" stop-color="#c79f5f" stop-opacity="0"/></radialGradient>
+            <radialGradient id="gFrio"><stop offset="0" stop-color="#f4f9ff"/><stop offset=".55" stop-color="#c6d8ec"/><stop offset=".82" stop-color="#7f9bb8" stop-opacity=".45"/><stop offset="1" stop-color="#7f9bb8" stop-opacity="0"/></radialGradient>
+            <radialGradient id="gPunto"><stop offset="0" stop-color="#fff2cf"/><stop offset=".25" stop-color="#f0d7a2" stop-opacity=".55"/><stop offset="1" stop-color="#f0d7a2" stop-opacity="0"/></radialGradient>
+            <linearGradient id="gCosta" x1="0" x2="1"><stop offset="0" stop-color="#dfeaf7" stop-opacity=".85"/><stop offset=".5" stop-color="#9db4cc" stop-opacity=".16"/><stop offset="1" stop-color="#9db4cc" stop-opacity="0"/></linearGradient>
+            <g id="figura" class="fig">
+              <rect class="parte brazoI" x="138" y="438" width="22" height="106" rx="11"/>
+              <rect class="parte brazoD" x="200" y="438" width="22" height="106" rx="11"/>
+              <path class="parte" d="M146 436 Q180 426 214 436 L224 640 L136 640 Z"/>
+              <circle class="parte" cx="180" cy="398" r="27"/>
+              <path class="parte" d="M152 393 A28 28 0 0 1 208 393 L216 399 L146 399 Z"/>
+              <circle class="ojo" cx="180" cy="381" r="4.2"/>
+            </g>
+          </defs>
+          <circle id="guardia" class="suave" cx="180" cy="250" r="26" fill="url(#gPunto)"/>
+          <circle id="foco" class="suave" cx="180" cy="235" r="158" fill="url(#gTibio)" opacity="0"/>
+          <circle id="focoFrio" class="suave" cx="180" cy="235" r="158" fill="url(#gFrio)" opacity="0"/>
+          <g transform="translate(180 250) scale(.62) translate(-180 -450)">
+            <g id="meta" class="suave pose" opacity="0" style="--tono:#c58a1c;--ojo:#c58a1c;--aL:150deg;--aR:-150deg"><use href="#figura"/></g>
+            <g id="sombra" class="suave pose" opacity="0" style="--tono:#050505;--ojo:#050505"><use href="#figura"/></g>
+          </g>
+          <rect id="costado" class="suave" x="0" y="0" width="240" height="640" fill="url(#gCosta)" opacity="0"/>
+          <rect id="lleno" class="suave" x="0" y="0" width="360" height="640" fill="#eef3f8" opacity="0"/>
+          <g id="ella" class="pose" style="--tono:#c9c2b3;--ojo:#141414;transform:translateY(430px)"><use href="#figura"/></g>
+        </svg>
+        <div class="t" id="marca"></div>
+        <div class="t" id="titulo"></div>
+        <div class="t" id="consigna"></div>
+        <div id="barra"><i></i></div>
+        <div class="t" id="subR"></div>
+        <div class="t" id="subT"></div>
+      </div>
+    </div>
+
+    <div class="lado">
+      <div class="botones">
+        <button class="boton" id="play">Reproducir todo</button>
+        <button class="boton" id="sig">Siguiente</button>
+      </div>
+      <div id="lista"></div>
+      <div id="detalle" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <div class="reglas">
+    <div><h4>Tres luces, tres sentidos</h4>
+      <p><span class="muestra" style="background:#f0d7a2"></span>Tibia: la función, lo que dirige Richie.<br><span class="muestra" style="background:#c6d8ec"></span>Fría: lo que no estaba ensayado, la voz de ella.<br><span class="muestra" style="background:#e2b65a"></span>Dorada: solo la figura del águila.</p></div>
+    <div><h4>Sin carteles ni globos</h4><p>Lo que dicen va como subtítulo fino, abajo. Richie a la izquierda, en letra recta. Ella a la derecha, en cursiva: se la reconoce antes de leerla.</p></div>
+    <div><h4>Sin barras ni puntajes</h4><p>El medidor es la figura dorada: cuanto mejor la tapás con la sombra, más se enciende. La consigna es una palabra y una línea que se completa.</p></div>
+    <div><h4>Los cambios de escena son cambios de luz</h4><p>No hay telón ni fundidos: la luz se abre, se corta, cambia de temperatura o te ilumina a vos.</p></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const TIBIA = '#c9c2b3', FRIA = '#b4c1d0', NEGRA = '#06070a';
+// Cada momento: qué hace la luz y qué se lee. foco/frio = tamaño de la luz (0 = apagada); y = cuánto está ella por debajo.
+const M = [
+  { g: 'El inicio', n: 'La luz de guardia', seg: 4.5,
+    que: 'La caja está a oscuras. Hay un solo punto de luz tibia que respira despacio. Nada más: ni título ni cartel.',
+    por: 'En los teatros vacíos se deja una lamparita prendida. Dice "acá pasa algo" sin explicar qué, y desde afuera de la caja se ve apenas un resplandor.',
+    guardia: 1, y: 430 },
+  { g: 'El inicio', n: 'Entrás', seg: 4.5,
+    que: 'Al detectarte, el punto se abre en un círculo de luz. Aparece el título, muy fino, y se va. Ella sube desde abajo hasta quedar dentro de la luz.',
+    por: 'La luz reacciona a vos antes de que nadie hable: lo primero que entendés es que la caja te vio.',
+    foco: .5, y: 250, titulo: 'tiesme', aL: 6, aR: -6 },
+  { g: 'La experiencia', n: 'Richie presenta', seg: 5,
+    que: 'La luz termina de abrirse. Richie habla: su texto aparece abajo a la izquierda, como subtítulo. Ella te copia.',
+    por: 'Sin viñetas ni caras dibujadas: Richie es el gorro que ya está sobre su cabeza. El ojo del gorro es lo único que lo señala.',
+    foco: 1, y: 0, aL: 22, aR: -34, subR: 'Pasá, pasá. Hoy vas a ser tiesme.' },
+  { g: 'La experiencia', n: 'Richie dice', seg: 5.5,
+    que: 'La consigna es una sola palabra grande y fina, arriba. Debajo, una línea se va completando mientras sostenés el gesto.',
+    por: 'Reemplaza el ícono, el cartel y el círculo de colores. Se lee de un golpe y no tapa a ella.',
+    foco: .92, y: 0, aL: 172, aR: -172, consigna: 'manos arriba', barra: 100, subR: 'Richie dice: ¡manos arriba!' },
+  { g: 'La experiencia', n: 'La estatua', seg: 6,
+    que: 'La luz se agranda sobre la pared. Adentro se ve la sombra de ella y, detrás, la figura dorada del águila. Cuando la sombra la tapa bien, el dorado se enciende.',
+    por: 'El juego de sombras necesita una pared iluminada: en esta estética esa pared es la única cosa iluminada, así que el juego queda en el centro.',
+    foco: 1.12, y: 0, aL: 128, aR: -136, sombra: 1, meta: .6, marca: 'estatua', subR: 'Casi. Le falta… algo. Más V.' },
+  { g: 'La experiencia', n: 'La revelación', seg: 6,
+    que: 'La luz tibia se corta de golpe. Queda una luz fría y dura que entra de costado. Ella se mueve sola y habla por primera vez: su texto aparece a la derecha, en cursiva.',
+    por: 'Es el momento en que la función se rompe. No hace falta "romper la pantalla": alcanza con que la luz deje de ser la de Richie.',
+    costado: 1, y: 0, tono: FRIA, aL: 0, aR: -96, subR: '…¿Quién te dijo que te muevas?', subT: 'Yo.' },
+  { g: 'La experiencia', n: 'La discusión', seg: 6,
+    que: 'Vuelve un círculo chico, ahora frío. Los dos textos conviven: Richie abajo a la izquierda, ella abajo a la derecha.',
+    por: 'La pelea se ve en la pantalla como dos voces en dos lugares y con dos letras. La luz ya no vuelve a ser tibia hasta que se pongan de acuerdo.',
+    frio: .62, costado: .35, y: 0, tono: FRIA, aL: 20, aR: -20, subR: 'El brazo estaba perfecto. El brazo lo hice yo.', subT: 'El brazo sí. Lo demás lo hice yo.' },
+  { g: 'La experiencia', n: 'Te ven', seg: 5.5,
+    que: 'Toda la proyección se enciende, casi blanca. Ella queda recortada en negro, quieta, mirándote.',
+    por: 'En una caja oscura la proyección es la única luz: cuando se enciende entera, te ilumina a vos. Te sentís visto de verdad, no hace falta mostrar una cámara.',
+    lleno: .93, y: 0, tono: NEGRA, clara: true, aL: 0, aR: 0, subT: '…nos está escuchando.' },
+  { g: 'La experiencia', n: '¡Cambio!', seg: 8, cambio: true,
+    que: 'Dos luces que se alternan. Tibia: ella te copia. Fría: ella hace una pose y vos la copiás. En cada "¡cambio!" hay un golpe de luz y se invierte.',
+    por: 'No hace falta leer de quién es el turno: lo dice el color de la luz. Cada vez más rápido, como ahora.',
+    foco: 1, y: 0, aL: 60, aR: -150, marca: 'te copia', subR: 'Mirá cómo te copia. Qué talento el mío.' },
+  { g: 'El final', n: 'El águila', seg: 6,
+    que: 'La luz vuelve a ser tibia y grande. Esta vez la figura dorada se enciende entera: el águila salió, entre los tres.',
+    por: 'Es la única vez que el dorado está encendido del todo. Por eso en el resto de la experiencia el dorado casi no se usa.',
+    foco: 1.18, y: 0, aL: 150, aR: -150, meta: 1, subR: '¡El águila!', subT: 'Salió.' },
+  { g: 'El final', n: 'La luz se cierra', seg: 6,
+    que: 'Reverencia. Ella baja, el círculo se achica hasta volver a ser el punto del principio. Queda la luz de guardia, esperando al siguiente.',
+    por: 'Termina igual que empezó, así que quien sale ve lo mismo que vio al entrar, y quien espera afuera no ve el final de otro.',
+    foco: .3, y: 300, aL: 0, aR: 0, subR: '¡Reverencia! Agachen la cabeza. Bueno, yo no puedo.' },
+];
+
+const caja = $('caja'), ella = $('ella');
+let actual = 0, reloj = null, relojCambio = null, sonando = false;
+const texto = (id, s) => { const e = $(id); if (s) { e.textContent = s; e.classList.add('ver'); } else e.classList.remove('ver'); };
+const escala = (id, k) => { const e = $(id); e.style.opacity = k ? 1 : 0; e.style.transform = `scale(${k || .08})`; };
+const pose = (e, aL, aR) => { e.style.setProperty('--aL', (aL || 0) + 'deg'); e.style.setProperty('--aR', (aR || 0) + 'deg'); };
+
+function poner(i) {
+  const m = M[i]; actual = i;
+  clearInterval(relojCambio);
+  $('guardia').style.opacity = m.guardia ? 1 : 0;
+  escala('foco', m.foco); escala('focoFrio', m.frio);
+  $('costado').style.opacity = m.costado || 0;
+  $('lleno').style.opacity = m.lleno || 0;
+  $('sombra').style.opacity = m.sombra || 0;
+  $('meta').style.opacity = m.meta || 0;
+  ella.style.transform = `translateY(${m.y || 0}px)`;
+  ella.style.setProperty('--tono', m.tono || TIBIA);
+  ella.style.setProperty('--ojo', m.tono === NEGRA ? NEGRA : '#141414');
+  pose(ella, m.aL, m.aR); pose($('sombra'), m.aL, m.aR);
+  caja.classList.toggle('clara', !!m.clara);
+  texto('titulo', m.titulo); texto('marca', m.marca); texto('consigna', m.consigna); texto('subR', m.subR); texto('subT', m.subT);
+  const b = $('barra'), bi = b.firstElementChild;
+  b.classList.toggle('ver', !!m.barra);
+  bi.style.transition = 'none'; bi.style.width = '0';
+  if (m.barra) setTimeout(() => { bi.style.transition = ''; bi.style.width = m.barra + '%'; }, 700);
+  if (m.cambio) {
+    let copia = true;
+    relojCambio = setInterval(() => {
+      copia = !copia;
+      $('lleno').style.transition = 'none'; $('lleno').style.opacity = .55;
+      setTimeout(() => { $('lleno').style.transition = ''; $('lleno').style.opacity = 0; }, 110);
+      escala('foco', copia ? 1 : 0); escala('focoFrio', copia ? 0 : 1);
+      ella.style.setProperty('--tono', copia ? TIBIA : FRIA);
+      pose(ella, copia ? 60 : 150, copia ? -150 : -40);
+      texto('marca', copia ? 'te copia' : 'copiala');
+      texto('subR', copia ? '¡Cambio!' : ''); texto('subT', copia ? '' : 'Ahora vos.');
+    }, 1700);
+  }
+  document.querySelectorAll('.momento').forEach((e, k) => e.classList.toggle('activo', k === i));
+  $('detalle').innerHTML = `<h3>${m.n}</h3><p>${m.que}</p><p class="porque">${m.por}</p>`;
+}
+
+// la lista, agrupada en inicio / experiencia / final
+let grupo = '';
+M.forEach((m, i) => {
+  if (m.g !== grupo) { grupo = m.g; const h = document.createElement('h2'); h.textContent = grupo; $('lista').appendChild(h); }
+  const b = document.createElement('button');
+  b.className = 'momento'; b.innerHTML = `<b>${String(i + 1).padStart(2, '0')}</b>${m.n}`;
+  b.onclick = () => { parar(); poner(i); };
+  $('lista').appendChild(b);
+});
+
+function parar() { sonando = false; clearTimeout(reloj); $('play').textContent = 'Reproducir todo'; }
+function seguir() { reloj = setTimeout(() => { if (!sonando) return; poner((actual + 1) % M.length); seguir(); }, M[actual].seg * 1000); }
+$('play').onclick = () => { if (sonando) return parar(); sonando = true; $('play').textContent = 'Pausar'; poner(0); seguir(); };
+$('sig').onclick = () => { parar(); poner((actual + 1) % M.length); };
+poner(0);
+</script>
+</body>
+</html>

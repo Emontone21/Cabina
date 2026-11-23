@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mundos para tiesme</title>
+<style>
+  :root { --bg:#0b0b0c; --tx:#e8e6e1; --tx2:#9a978f; --li:#262628; --ac:#d9b36a; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--tx); font:15px/1.55 system-ui, "Segoe UI", sans-serif; }
+  header, nav, main { max-width:1180px; margin:auto; padding-left:24px; padding-right:24px; }
+  header { padding-top:22px; }
+  h1 { font:400 28px/1.2 Georgia, serif; margin:0 0 6px; }
+  header p { color:var(--tx2); margin:0; max-width:780px; }
+  nav { display:flex; gap:8px; flex-wrap:wrap; padding-top:16px; padding-bottom:14px; }
+  nav button { background:none; border:1px solid var(--li); color:var(--tx2); padding:9px 16px; border-radius:999px; font:inherit; cursor:pointer; }
+  nav button b { color:var(--tx); font-weight:500; margin-right:6px; }
+  nav button.on { border-color:var(--ac); color:var(--tx); background:#1a1712; }
+  main { display:grid; grid-template-columns:auto 1fr; gap:32px; padding-bottom:48px; align-items:start; }
+  .izq { position:sticky; top:12px; }
+  .caja { height:clamp(380px, calc(100vh - 150px), 740px); aspect-ratio:9/16; background:#000; border:1px solid #1d1d1f; border-radius:6px; overflow:hidden; position:relative; }
+  .caja svg { position:absolute; inset:0; width:100%; height:100%; display:none; }
+  .caja svg.on { display:block; }
+  .pasos { display:flex; gap:4px; margin-top:10px; }
+  .pasos button { flex:1; background:#151517; border:1px solid var(--li); color:var(--tx2); padding:7px 2px; border-radius:6px; font:12px/1.2 system-ui, sans-serif; cursor:pointer; }
+  .pasos button.on { color:#000; background:var(--ac); border-color:var(--ac); }
+  .play { width:100%; margin-top:6px; background:none; border:1px solid var(--li); color:var(--tx); padding:8px; border-radius:6px; font:inherit; cursor:pointer; }
+  h2 { font:400 30px/1.15 Georgia, serif; margin:2px 0 4px; }
+  .linea { color:var(--ac); font-style:italic; margin:0 0 18px; }
+  ol { list-style:none; padding:0; margin:0 0 22px; counter-reset:p; }
+  ol li { padding:10px 12px 10px 40px; border-left:2px solid var(--li); position:relative; color:var(--tx2); cursor:pointer; counter-increment:p; }
+  ol li::before { content:counter(p); position:absolute; left:14px; top:10px; color:#555; font-size:13px; }
+  ol li b { color:var(--tx); font-weight:500; display:block; }
+  ol li.on { border-left-color:var(--ac); background:#141311; color:#cfccc4; }
+  ol li.on::before { color:var(--ac); }
+  h3 { font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--tx2); font-weight:500; margin:20px 0 6px; }
+  .der p { margin:0 0 8px; max-width:640px; }
+  @media (max-width:780px) {
+    main { grid-template-columns:1fr; }
+    .izq { position:static; }
+    .caja { height:auto; width:100%; }
+  }
+
+  /* ---------- lo común a los cuatro dibujos ---------- */
+  svg .telon, svg .telon * { transition:transform 1.6s cubic-bezier(.6,0,.3,1); }
+  svg .roto { opacity:0; transition:opacity .8s; }
+  svg[data-s=roto] .roto { opacity:1; }
+  .ella .brazo { transform-box:fill-box; transform-origin:50% 2%; transition:transform .6s; }
+  .ella .cabeza { transform-box:fill-box; transform-origin:50% 100%; }
+  .ojoR { fill:#efe9dc; }
+  .bocaR { fill:none; stroke:#efe9dc; stroke-width:1.6; stroke-linecap:round; }
+  svg[data-s=abierto] .ella .brazo.i { animation:bi 3.4s ease-in-out infinite; }
+  svg[data-s=abierto] .ella .brazo.d { animation:bd 3.4s ease-in-out 1.7s infinite; }
+  @keyframes bi { 0%,100% { transform:rotate(8deg); } 40%,60% { transform:rotate(150deg); } }
+  @keyframes bd { 0%,100% { transform:rotate(-8deg); } 40%,60% { transform:rotate(-120deg); } }
+  /* acto 2: se mueve sola, a los tirones */
+  svg[data-s=roto] .ella .brazo.i { animation:ri 2.2s steps(1) infinite; }
+  svg[data-s=roto] .ella .brazo.d { transform:rotate(-30deg); }
+  svg[data-s=roto] .ella .cabeza { animation:tic 2.6s steps(1) infinite; }
+  @keyframes ri { 0% { transform:rotate(20deg); } 35% { transform:rotate(95deg); } 60% { transform:rotate(60deg); } 85% { transform:rotate(170deg); } }
+  @keyframes tic { 0% { transform:rotate(0); } 30% { transform:rotate(-16deg); } 55% { transform:rotate(7deg); } 80% { transform:rotate(-24deg); } }
+
+  /* ---------- A · caja de música ---------- */
+  .A[data-s=rendija] .telon { transform:translateY(-70px); }
+  .A[data-s=abierto] .telon, .A[data-s=roto] .telon { transform:translateY(-660px); }
+  .A[data-s=final] .telon { transform:translateY(0); transition-duration:.45s; transition-timing-function:cubic-bezier(.7,0,1,1); }
+  .A .base { transform-origin:180px 552px; transition:transform 1s; }
+  .A[data-s=abierto] .base { animation:vaiven 5s ease-in-out infinite; }
+  .A[data-s=roto] .base { transform:rotate(-6deg) translateY(10px); }
+  @keyframes vaiven { 0%,100% { transform:rotate(-1.6deg); } 50% { transform:rotate(1.6deg); } }
+  .A .llave { transform-box:fill-box; transform-origin:50% 50%; }
+  .A[data-s=cerrado] .llave, .A[data-s=rendija] .llave, .A[data-s=abierto] .llave { animation:gira 4s linear infinite; }
+  @keyframes gira { to { transform:rotate(360deg); } }
+
+  /* ---------- B · espejo tapado (la sábana se escala sobre su borde de arriba o de abajo) ---------- */
+  .B .telon { transform-origin:0 0; transition:transform 1.2s ease; }
+  .B[data-s=rendija] .telon { transform:translateY(7px) scaleY(.84); }
+  .B[data-s=abierto] .telon, .B[data-s=roto] .telon { transform:translateY(590px) scaleY(.06); transition:transform .8s cubic-bezier(.55,0,1,1); }
+  .B[data-s=final] .telon { transition:transform 2.8s cubic-bezier(.2,0,.2,1); }
+  .B .lampara { transform-origin:250px 58px; }
+  .B[data-s=abierto] .lampara { animation:hamaca 6s ease-in-out infinite; }
+  .B[data-s=roto] .lampara { animation:hamaca 1.6s ease-in-out infinite; }
+  @keyframes hamaca { 0%,100% { transform:rotate(-4deg); } 50% { transform:rotate(4deg); } }
+  .B[data-s=roto] .vidrioLuz { opacity:.35; }
+  .B .vidrioLuz { transition:opacity 1s; }
+
+  /* ---------- C · transmisión de madrugada ---------- */
+  .C .arriba { transition:transform 1.2s cubic-bezier(.6,0,.3,1); }
+  .C .abajo { transition:transform 1.2s cubic-bezier(.6,0,.3,1); }
+  .C[data-s=rendija] .arriba { transform:translateY(-30px); }
+  .C[data-s=rendija] .abajo { transform:translateY(30px); }
+  .C[data-s=rendija] .mitades { animation:rueda .9s steps(2) infinite; }
+  @keyframes rueda { 0% { transform:translateY(0); } 50% { transform:translateY(6px); } }
+  .C[data-s=abierto] .arriba, .C[data-s=roto] .arriba, .C[data-s=final] .arriba { transform:translateY(-340px); }
+  .C[data-s=abierto] .abajo, .C[data-s=roto] .abajo, .C[data-s=final] .abajo { transform:translateY(340px); }
+  .C .estatica { opacity:0; transition:opacity .4s; }
+  .C[data-s=rendija] .estatica { opacity:.4; }
+  .C .ruido { animation:salta .25s steps(3) infinite; }
+  @keyframes salta { 0% { transform:translate(0,0); } 33% { transform:translate(-40px,20px); } 66% { transform:translate(30px,-30px); } }
+  .C .esc { transform-origin:180px 320px; transition:transform .3s ease-in; }
+  .C .esc2 { transform-origin:180px 320px; transition:transform .35s ease-in; }
+  .C[data-s=final] .esc2 { transform:scaleY(.006); }
+  .C[data-s=final] .esc { transform:scaleX(.012); transition-delay:.35s; }
+  .C .punto { opacity:0; }
+  .C[data-s=final] .punto { animation:punto 3.2s .6s forwards; }
+  @keyframes punto { 0% { opacity:0; } 10% { opacity:1; } 100% { opacity:0; } }
+  .C .aire2 { opacity:0; } .C[data-s=roto] .aire1 { opacity:0; } .C[data-s=roto] .aire2 { opacity:1; }
+  .C .franjas { animation:franjas 1.3s steps(4) infinite; }
+  @keyframes franjas { 0% { transform:translateX(0); } 25% { transform:translateX(-14px); } 50% { transform:translateX(9px); } 75% { transform:translateX(-4px); } }
+
+  /* ---------- D · vidriera ---------- */
+  .D .telon { transition:transform 2.2s cubic-bezier(.5,.1,.3,1); }
+  .D[data-s=rendija] .telon { transform:translateY(-92px); }
+  .D[data-s=abierto] .telon, .D[data-s=roto] .telon { transform:translateY(-575px); }
+  .D[data-s=final] .telon { transition:transform .55s cubic-bezier(.7,0,1,1); }
+  .D .derrame { opacity:0; transition:opacity 1.2s; }
+  .D[data-s=rendija] .derrame, .D[data-s=abierto] .derrame { opacity:1; }
+  .D[data-s=roto] .tubo, .D[data-s=roto] .luzTubo { animation:titila 2.4s steps(1) infinite; }
+  @keyframes titila { 0% { opacity:1; } 8% { opacity:.1; } 12% { opacity:.9; } 40% { opacity:.15; } 46% { opacity:.6; } 70% { opacity:.05; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Mundos para tiesme</h1>
+  <p>Cuatro lugares distintos para la experiencia, ninguno de circo. En cada uno se ve el <b>telón</b> (lo que hay antes de que
+    arranque), el <b>fondo</b> donde está ella, cómo <b>se rompe</b> en la revelación y cómo <b>termina</b>. Los cuatro usan
+    lo mismo que ya usa la cabina: telón cerrado, rendija para asomarse, abierto y fallas. La historia y los juegos no cambian.</p>
+</header>
+<nav id="mundos"></nav>
+<main>
+  <div class="izq">
+    <div class="caja" id="caja"></div>
+    <div class="pasos" id="pasos"></div>
+    <button class="play" id="play">▶ Reproducir de principio a fin</button>
+  </div>
+  <div class="der" id="texto"></div>
+</main>
+
+<script>
+// la figura: ella de la cintura para arriba, con Richie (el gorro) en la cabeza
+function ella(x, y, s, piel, gorro, borde) {
+  const P = `fill="url(#${piel})" stroke="${borde}" stroke-width="1"`;
+  const brazo = c => `<path class="brazo ${c}" ${P} d="M-11 0 Q-15 62 -11 116 Q-12 134 0 136 Q12 134 11 116 Q15 62 11 0 Q0 -5 -11 0 Z"/>`;
+  return `<g transform="translate(${x} ${y + 38 * s}) scale(${s})"><g class="ella">
+    <g transform="translate(-63 -178)">${brazo('i')}</g>
+    <g transform="translate(63 -178)">${brazo('d')}</g>
+    <path ${P} d="M-64 -184 Q0 -198 64 -184 Q60 -112 46 -38 Q0 -28 -46 -38 Q-60 -112 -64 -184 Z"/>
+    <rect ${P} x="-11" y="-210" width="22" height="34" rx="7"/>
+    <g class="cabeza">
+      <ellipse ${P} cx="0" cy="-238" rx="30" ry="35"/>
+      <ellipse cx="-11" cy="-238" rx="3" ry="3.8" fill="#0b0b0b"/><ellipse cx="11" cy="-238" rx="3" ry="3.8" fill="#0b0b0b"/>
+      <path d="M-5 -217 Q0 -215 5 -217" fill="none" stroke="#3a2f2a" stroke-width="1.4"/>
+      <g class="richie">
+        <path fill="${gorro}" d="M-30 -262 Q-38 -306 -6 -318 Q28 -324 33 -292 Q35 -276 31 -262 Z"/>
+        <path fill="${gorro}" stroke="#000" stroke-opacity=".4" d="M-50 -263 Q0 -280 50 -263 Q0 -250 -50 -263 Z"/>
+        <circle class="ojoR" cx="-7" cy="-291" r="3.4"/><circle class="ojoR" cx="12" cy="-291" r="3.4"/>
+        <path class="bocaR" d="M-6 -279 Q3 -273 13 -279"/>
+      </g>
+    </g></g></g>`;
+}
+const rayos = (cx, cy, pts, color, op) => pts.map(p => `<polyline points="${cx},${cy} ${p}" fill="none" stroke="${color}" stroke-opacity="${op}" stroke-width="1.1"/>`).join('');
+
+// ------------------------------------------------------------------ A · LA CAJA DE MÚSICA
+const dibA = () => {
+  let dientes = ''; for (let x = 46; x <= 314; x += 8) dientes += `<line x1="${x}" y1="589" x2="${x}" y2="606" stroke="#8d806c" stroke-width="2"/>`;
+  return `
+<defs>
+  <radialGradient id="A_terc" cx="50%" cy="46%" r="72%"><stop offset="0" stop-color="#5c1727"/><stop offset=".55" stop-color="#2a0a12"/><stop offset="1" stop-color="#0b0305"/></radialGradient>
+  <pattern id="A_capi" width="36" height="36" patternUnits="userSpaceOnUse"><path d="M0 18 L18 0 L36 18 L18 36 Z" fill="none" stroke="#000" stroke-opacity=".5" stroke-width="1.6"/><g fill="#c89a55" fill-opacity=".45"><circle cx="18" cy="0" r="1.7"/><circle cx="0" cy="18" r="1.7"/><circle cx="36" cy="18" r="1.7"/><circle cx="18" cy="36" r="1.7"/></g></pattern>
+  <linearGradient id="A_laca" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#25170f"/><stop offset=".5" stop-color="#130b07"/><stop offset="1" stop-color="#080403"/></linearGradient>
+  <linearGradient id="A_oro" x1="0" x2="1"><stop offset="0" stop-color="#6e5226"/><stop offset=".5" stop-color="#d8b46a"/><stop offset="1" stop-color="#6e5226"/></linearGradient>
+  <linearGradient id="A_piel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0dfca"/><stop offset="1" stop-color="#5e4a40"/></linearGradient>
+  <radialGradient id="A_luz" cx="50%" cy="38%" r="55%"><stop offset="0" stop-color="#ffd9a0" stop-opacity=".26"/><stop offset="1" stop-color="#ffd9a0" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="360" height="640" fill="#000"/>
+<g class="fondo">
+  <rect x="14" y="20" width="332" height="600" rx="8" fill="url(#A_terc)"/>
+  <rect x="14" y="20" width="332" height="600" rx="8" fill="url(#A_capi)"/>
+  <rect x="24" y="30" width="312" height="580" rx="5" fill="none" stroke="url(#A_oro)" stroke-width="2" opacity=".7"/>
+  <ellipse cx="180" cy="116" rx="52" ry="66" fill="#06060a" stroke="url(#A_oro)" stroke-width="4"/>
+  <ellipse cx="180" cy="116" rx="44" ry="58" fill="none" stroke="#d8b46a" stroke-opacity=".25"/>
+  <ellipse cx="164" cy="98" rx="12" ry="30" fill="#fff" opacity=".06" transform="rotate(-20 164 98)"/>
+  <rect x="14" y="20" width="332" height="600" fill="url(#A_luz)"/>
+</g>
+<g class="base">
+  ${ella(180, 548, 1.08, 'A_piel', '#2b1a12', '#00000055')}
+  <ellipse cx="180" cy="552" rx="104" ry="16" fill="#1c120d" stroke="url(#A_oro)" stroke-width="2"/>
+</g>
+<g class="meca">
+  <rect x="34" y="582" width="292" height="28" rx="4" fill="#2a2520" stroke="#6d5a3a"/>
+  ${dientes}
+  <rect x="40" y="606" width="280" height="4" fill="#4a3f33"/>
+</g>
+<g class="roto">
+  <rect x="14" y="20" width="332" height="600" fill="#081428" opacity=".38"/>
+  <path d="M74 64 L96 140 L78 214 L108 300 L88 386 L102 440" fill="none" stroke="#000" stroke-width="9" stroke-linejoin="bevel"/>
+  <path d="M77 64 L99 140 L81 214 L111 300 L91 386 L105 440" fill="none" stroke="#a0505c" stroke-width="1" opacity=".7"/>
+  ${rayos(196, 128, ['166,62', '228,80', '232,150', '200,182', '150,150', '140,104'], '#dfe6ef', .7)}
+  <g stroke="#8d806c" stroke-width="2"><line x1="150" y1="589" x2="156" y2="602"/><line x1="158" y1="590" x2="168" y2="598"/><line x1="230" y1="589" x2="222" y2="604"/></g>
+</g>
+<g class="telon">
+  <rect width="360" height="640" fill="url(#A_laca)"/>
+  <path d="M0 0 L360 0 L360 90 L0 300 Z" fill="#fff" opacity=".025"/>
+  <rect x="16" y="16" width="328" height="608" rx="6" fill="none" stroke="url(#A_oro)" stroke-width="2"/>
+  <rect x="26" y="26" width="308" height="588" rx="4" fill="none" stroke="url(#A_oro)" stroke-width=".8" opacity=".55"/>
+  <g fill="none" stroke="#c89a55" stroke-width="1.2" opacity=".7">
+    <path d="M34 70 Q34 34 70 34 M42 70 Q42 42 70 42 Q56 48 52 62"/>
+    <path d="M326 70 Q326 34 290 34 M318 70 Q318 42 290 42 Q304 48 308 62"/>
+    <path d="M34 570 Q34 606 70 606 M42 570 Q42 598 70 598 Q56 592 52 578"/>
+    <path d="M326 570 Q326 606 290 606 M318 570 Q318 598 290 598 Q304 592 308 578"/>
+  </g>
+  <ellipse cx="180" cy="300" rx="76" ry="98" fill="none" stroke="url(#A_oro)" stroke-width="1.6"/>
+  <ellipse cx="180" cy="300" rx="68" ry="90" fill="none" stroke="#c89a55" stroke-width=".6" opacity=".6"/>
+  <text x="180" y="308" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="34" fill="#d3ad62">tiesme</text>
+  <path d="M146 326 Q180 338 214 326" fill="none" stroke="#c89a55" stroke-width="1" opacity=".7"/>
+  <circle cx="180" cy="548" r="7" fill="#000" stroke="url(#A_oro)" stroke-width="1.6"/>
+  <path d="M176.5 552 L174 568 L186 568 L183.5 552 Z" fill="#000" stroke="url(#A_oro)" stroke-width="1.2"/>
+</g>
+<g class="llave"><path d="M338 312 Q326 300 338 296 Q346 300 346 312 Q346 324 338 328 Q326 324 338 312 Z M346 312 Q358 300 360 312 Q358 324 346 312 Z" fill="#b08440" stroke="#5a4320"/></g>`;
+};
+
+// ------------------------------------------------------------------ B · EL ESPEJO TAPADO
+const dibB = () => `
+<defs>
+  <linearGradient id="B_marco" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8f949a"/><stop offset=".3" stop-color="#383b40"/><stop offset=".55" stop-color="#a3a8ad"/><stop offset="1" stop-color="#26282c"/></linearGradient>
+  <linearGradient id="B_vid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#131a22"/><stop offset="1" stop-color="#07090c"/></linearGradient>
+  <radialGradient id="B_foco" gradientUnits="userSpaceOnUse" cx="250" cy="166" r="230"><stop offset="0" stop-color="#fff0d2" stop-opacity=".42"/><stop offset=".4" stop-color="#ffe6b8" stop-opacity=".1"/><stop offset="1" stop-color="#ffe6b8" stop-opacity="0"/></radialGradient>
+  <radialGradient id="B_pared" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#16171b"/><stop offset="1" stop-color="#040405"/></radialGradient>
+  <linearGradient id="B_piel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9e2d6"/><stop offset="1" stop-color="#3f444b"/></linearGradient>
+  <linearGradient id="B_sab" x1="0" x2="1"><stop offset="0" stop-color="#8f8b84"/><stop offset=".12" stop-color="#b8b4ac"/><stop offset=".22" stop-color="#97938b"/><stop offset=".38" stop-color="#c2beb5"/><stop offset=".5" stop-color="#9d9991"/><stop offset=".64" stop-color="#bdb9b0"/><stop offset=".78" stop-color="#928e87"/><stop offset=".9" stop-color="#b3afa6"/><stop offset="1" stop-color="#85817b"/></linearGradient>
+  <linearGradient id="B_somb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".05"/><stop offset="1" stop-color="#000" stop-opacity=".5"/></linearGradient>
+  <clipPath id="B_clip"><path d="M56 596 L56 174 Q56 58 180 58 Q304 58 304 174 L304 596 Z"/></clipPath>
+</defs>
+<rect width="360" height="640" fill="url(#B_pared)"/>
+<rect y="604" width="360" height="36" fill="#0a0a0b"/><line x1="0" y1="604" x2="360" y2="604" stroke="#1d1d20"/>
+<g class="fondo">
+  <path d="M40 612 L40 170 Q40 40 180 40 Q320 40 320 170 L320 612 Z" fill="url(#B_marco)"/>
+  <path d="M56 596 L56 174 Q56 58 180 58 Q304 58 304 174 L304 596 Z" fill="url(#B_vid)"/>
+  <g clip-path="url(#B_clip)">
+    <rect x="104" y="112" width="152" height="360" fill="#0b0f14"/>
+    <polygon points="56,596 104,472 256,472 304,596" fill="#0e1217"/>
+    <g stroke="#2a3038" stroke-width="1"><line x1="56" y1="70" x2="104" y2="112"/><line x1="304" y1="70" x2="256" y2="112"/><line x1="104" y1="472" x2="56" y2="596"/><line x1="256" y1="472" x2="304" y2="596"/></g>
+    <rect x="200" y="200" width="40" height="120" fill="none" stroke="#1d232b"/>
+    <g class="lampara">
+      <line x1="250" y1="40" x2="250" y2="156" stroke="#3a3a3a"/>
+      <circle class="vidrioLuz" cx="250" cy="166" r="230" fill="url(#B_foco)"/>
+      <circle cx="250" cy="166" r="7" fill="#fff4dc"/>
+    </g>
+    ${ella(180, 610, 1.12, 'B_piel', '#1e1b19', '#00000066')}
+    <path d="M56 300 L180 58 L230 58 L56 400 Z" fill="#fff" opacity=".035"/>
+  </g>
+  <path d="M56 596 L56 174 Q56 58 180 58 Q304 58 304 174 L304 596 Z" fill="none" stroke="#000" stroke-opacity=".7" stroke-width="2"/>
+</g>
+<g class="roto" clip-path="url(#B_clip)">
+  <rect width="360" height="640" fill="#0b1a2e" opacity=".3"/>
+  ${rayos(226, 360, ['300,250', '304,330', '290,430', '250,520', '196,470', '150,410', '170,300', '210,230'], '#e8eef5', .7)}
+  <circle cx="226" cy="360" r="10" fill="none" stroke="#e8eef5" stroke-opacity=".5"/>
+  <polyline points="300,250 304,200" fill="none" stroke="#e8eef5" stroke-opacity=".5"/>
+</g>
+<g class="telon">
+  <path d="M46 46 Q180 74 314 46 L326 300 L334 626 Q300 614 270 628 Q230 616 190 630 Q150 618 110 629 Q70 616 28 626 L36 300 Z" fill="url(#B_sab)"/>
+  <path d="M46 46 Q180 74 314 46 L326 300 L334 626 Q300 614 270 628 Q230 616 190 630 Q150 618 110 629 Q70 616 28 626 L36 300 Z" fill="url(#B_somb)"/>
+  <g fill="none" stroke="#5d5a54" stroke-opacity=".4" stroke-width="2.4">
+    <path d="M100 62 Q112 300 96 620"/><path d="M180 68 Q170 330 188 626"/><path d="M262 62 Q252 300 268 620"/>
+    <path d="M46 46 Q118 120 180 68"/><path d="M180 68 Q244 120 314 46"/>
+  </g>
+  <circle cx="46" cy="46" r="3" fill="#777"/><circle cx="314" cy="46" r="3" fill="#777"/>
+</g>`;
+
+// ------------------------------------------------------------------ C · TRANSMISIÓN DE MADRUGADA
+const dibC = () => {
+  const grises = ['#d6d6d6', '#b4b4b4', '#929292', '#727272', '#545454', '#383838', '#202020'];
+  const barras = grises.map((g, i) => `<rect x="${78 + i * 29.2}" y="236" width="29.4" height="94" fill="${g}"/>`).join('');
+  let grilla = ''; for (let x = 20; x < 360; x += 40) grilla += `<line x1="${x}" y1="0" x2="${x}" y2="640"/>`; for (let y = 0; y < 640; y += 40) grilla += `<line x1="0" y1="${y}" x2="360" y2="${y}"/>`;
+  return `
+<defs>
+  <radialGradient id="C_cyc" cx="50%" cy="62%" r="70%"><stop offset="0" stop-color="#1c1f23"/><stop offset="1" stop-color="#040405"/></radialGradient>
+  <radialGradient id="C_piso" gradientUnits="userSpaceOnUse" cx="180" cy="610" r="190"><stop offset="0" stop-color="#3a3f46" stop-opacity=".9"/><stop offset="1" stop-color="#3a3f46" stop-opacity="0"/></radialGradient>
+  <linearGradient id="C_piel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eaeaea"/><stop offset="1" stop-color="#4f555c"/></linearGradient>
+  <linearGradient id="C_cono" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+  <pattern id="C_scan" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="1.4" fill="#000" opacity=".4"/></pattern>
+  <radialGradient id="C_vig" cx="50%" cy="50%" r="75%"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".9"/></radialGradient>
+  <filter id="C_ruido" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="1" seed="4"/><feColorMatrix type="saturate" values="0"/></filter>
+  <filter id="C_brillo"><feGaussianBlur stdDeviation="2.5"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <clipPath id="C_pant"><rect x="6" y="6" width="348" height="628" rx="26"/></clipPath>
+  <clipPath id="C_sup"><rect width="360" height="320"/></clipPath>
+  <clipPath id="C_inf"><rect y="320" width="360" height="320"/></clipPath>
+  <g id="C_carta">
+    <rect width="360" height="640" fill="#161616"/>
+    <g stroke="#2c2c2c">${grilla}</g>
+    <circle cx="180" cy="300" r="132" fill="#1f1f1f" stroke="#8a8a8a" stroke-width="2"/>
+    <text x="180" y="214" text-anchor="middle" font-family="Consolas, monospace" font-size="17" letter-spacing="3" fill="#d8d8d8">CANAL 0</text>
+    ${barras}
+    <rect x="78" y="330" width="204" height="22" fill="#0c0c0c"/><rect x="129" y="330" width="51" height="22" fill="#e0e0e0"/><rect x="231" y="330" width="51" height="22" fill="#6a6a6a"/>
+    <line x1="180" y1="168" x2="180" y2="432" stroke="#8a8a8a"/><line x1="48" y1="300" x2="312" y2="300" stroke="#8a8a8a" opacity=".5"/>
+    <text x="180" y="390" text-anchor="middle" font-family="Consolas, monospace" font-size="13" letter-spacing="4" fill="#bdbdbd">AGUARDE</text>
+    <text x="180" y="478" text-anchor="middle" font-family="Consolas, monospace" font-size="22" letter-spacing="2" fill="#9a9a9a">03:47</text>
+  </g>
+</defs>
+<rect width="360" height="640" fill="#000"/>
+<g clip-path="url(#C_pant)">
+  <g class="esc"><g class="esc2">
+    <rect width="360" height="640" fill="url(#C_cyc)"/>
+    <ellipse cx="180" cy="610" rx="190" ry="60" fill="url(#C_piso)"/>
+    <g stroke="#2a2d31" stroke-width="3" fill="none"><line x1="44" y1="640" x2="44" y2="310"/><line x1="44" y1="560" x2="16" y2="640"/><line x1="44" y1="560" x2="74" y2="640"/></g>
+    <polygon points="70,300 300,210 300,560" fill="url(#C_cono)"/>
+    <g transform="rotate(18 52 296)"><rect x="30" y="280" width="48" height="34" rx="4" fill="#202327" stroke="#3b3f44"/><rect x="76" y="284" width="6" height="26" fill="#d9d9d9" opacity=".7"/></g>
+    <path d="M60 640 Q120 600 100 560 Q80 520 140 520" fill="none" stroke="#0d0e10" stroke-width="5"/>
+    <g>
+      <rect x="236" y="34" width="98" height="30" rx="3" fill="#2a0707" stroke="#5c1111"/>
+      <text class="aire1" x="285" y="55" text-anchor="middle" font-family="Consolas, monospace" font-size="15" letter-spacing="2" fill="#ff5050" filter="url(#C_brillo)">AL AIRE</text>
+      <text class="aire2" x="285" y="55" text-anchor="middle" font-family="Consolas, monospace" font-size="13" letter-spacing="1" fill="#8a8a8a">SIN SEÑAL</text>
+    </g>
+    ${ella(180, 600, 1.1, 'C_piel', '#26292d', '#00000066')}
+    <g class="roto">
+      <g class="ruido"><rect x="-60" y="-60" width="480" height="760" filter="url(#C_ruido)" opacity=".35"/></g>
+      <g class="franjas" fill="#d0d0d0"><rect y="118" width="360" height="10" opacity=".22"/><rect y="250" width="360" height="26" opacity=".12"/><rect y="404" width="360" height="6" opacity=".3"/><rect y="470" width="360" height="40" opacity=".08"/></g>
+      <rect x="120" y="250" width="120" height="26" fill="#000" opacity=".7"/>
+    </g>
+    <rect width="360" height="640" fill="url(#C_scan)"/>
+    <rect width="360" height="640" fill="url(#C_vig)"/>
+  </g></g>
+  <g class="telon"><g class="mitades">
+    <g class="arriba"><use href="#C_carta" clip-path="url(#C_sup)"/></g>
+    <g class="abajo"><use href="#C_carta" clip-path="url(#C_inf)"/></g>
+  </g>
+    <g class="estatica"><g class="ruido"><rect x="-60" y="-60" width="480" height="760" filter="url(#C_ruido)"/></g></g>
+  </g>
+</g>
+<circle class="punto" cx="180" cy="320" r="3.5" fill="#fff" filter="url(#C_brillo)"/>`;
+};
+
+// ------------------------------------------------------------------ D · LA VIDRIERA
+const dibD = () => `
+<defs>
+  <linearGradient id="D_inte" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#121715"/><stop offset="1" stop-color="#060807"/></linearGradient>
+  <radialGradient id="D_luzTubo" gradientUnits="userSpaceOnUse" cx="180" cy="70" r="420"><stop offset="0" stop-color="#d6f0dc" stop-opacity=".3"/><stop offset=".5" stop-color="#d6f0dc" stop-opacity=".07"/><stop offset="1" stop-color="#d6f0dc" stop-opacity="0"/></radialGradient>
+  <linearGradient id="D_piel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef3ee"/><stop offset="1" stop-color="#56605a"/></linearGradient>
+  <linearGradient id="D_chapa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c2f32"/><stop offset=".45" stop-color="#4d5155"/><stop offset="1" stop-color="#1e2022"/></linearGradient>
+  <pattern id="D_pers" width="360" height="18" patternUnits="userSpaceOnUse"><rect width="360" height="18" fill="url(#D_chapa)"/><line x1="0" y1="17" x2="360" y2="17" stroke="#0c0c0d" stroke-width="2"/></pattern>
+  <radialGradient id="D_calle" gradientUnits="userSpaceOnUse" cx="180" cy="610" r="200"><stop offset="0" stop-color="#cfe8d4" stop-opacity=".22"/><stop offset="1" stop-color="#cfe8d4" stop-opacity="0"/></radialGradient>
+  <radialGradient id="D_farol" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffcf8a" stop-opacity=".16"/><stop offset="1" stop-color="#ffcf8a" stop-opacity="0"/></radialGradient>
+  <filter id="D_blur"><feGaussianBlur stdDeviation="10"/></filter>
+</defs>
+<rect width="360" height="640" fill="#000"/>
+<rect y="610" width="360" height="30" fill="#0a0a0a"/>
+<g class="derrame"><rect y="560" width="360" height="80" fill="url(#D_calle)"/></g>
+<g class="fondo">
+  <rect x="12" y="40" width="336" height="572" fill="#0e0f10"/>
+  <rect x="24" y="52" width="312" height="548" fill="url(#D_inte)"/>
+  <rect x="24" y="520" width="312" height="80" fill="#111513"/><line x1="24" y1="520" x2="336" y2="520" stroke="#232a26"/>
+  <rect class="tubo" x="70" y="62" width="220" height="7" rx="3.5" fill="#effff3"/>
+  <rect class="luzTubo" x="24" y="52" width="312" height="548" fill="url(#D_luzTubo)"/>
+  <rect x="118" y="518" width="124" height="82" fill="#1a1f1c" stroke="#2c332f"/>
+  <rect x="112" y="512" width="136" height="9" fill="#232a26"/>
+  ${ella(180, 520, 1.04, 'D_piel', '#202422', '#00000055')}
+  <line x1="244" y1="521" x2="258" y2="552" stroke="#8a8a80"/>
+  <g transform="rotate(14 262 562)"><rect x="248" y="552" width="30" height="18" rx="2" fill="#d9d3bf"/><circle cx="252" cy="561" r="1.6" fill="#555"/><text x="266" y="565" text-anchor="middle" font-family="Georgia, serif" font-size="9" fill="#3a352c">$ —</text></g>
+  <text x="180" y="138" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="38" fill="#c9a25a" opacity=".9">tiesme</text>
+  <text x="180" y="162" text-anchor="middle" font-family="Georgia, serif" font-size="10" letter-spacing="5" fill="#c9a25a" opacity=".7">MUÑECAS</text>
+  <circle cx="296" cy="120" r="70" fill="url(#D_farol)"/>
+  <path d="M24 330 L150 52 L178 52 L24 392 Z" fill="#fff" opacity=".035"/>
+  <path d="M220 600 L336 340 L336 372 L236 600 Z" fill="#fff" opacity=".03"/>
+  <rect x="24" y="52" width="312" height="548" fill="none" stroke="#1b1c1e" stroke-width="6"/>
+</g>
+<g class="roto">
+  <ellipse cx="180" cy="300" rx="80" ry="46" fill="#dfe8e2" opacity=".14" filter="url(#D_blur)"/>
+  <g fill="#e8efe9" opacity=".2">
+    <g transform="translate(132 352) rotate(-12)"><ellipse rx="14" ry="17"/><ellipse cx="-11" cy="-24" rx="3.2" ry="9"/><ellipse cx="-3" cy="-28" rx="3.2" ry="10"/><ellipse cx="5" cy="-27" rx="3.2" ry="10"/><ellipse cx="12" cy="-22" rx="3" ry="8"/><ellipse cx="17" cy="2" rx="3" ry="8" transform="rotate(50 17 2)"/></g>
+    <g transform="translate(234 384) rotate(10)"><ellipse rx="14" ry="17"/><ellipse cx="-11" cy="-22" rx="3" ry="8"/><ellipse cx="-4" cy="-27" rx="3.2" ry="10"/><ellipse cx="4" cy="-28" rx="3.2" ry="10"/><ellipse cx="11" cy="-24" rx="3.2" ry="9"/><ellipse cx="-17" cy="2" rx="3" ry="8" transform="rotate(-50 -17 2)"/></g>
+  </g>
+  ${rayos(318, 74, ['250,60', '270,120', '300,170', '336,150', '336,96'], '#e8efe9', .55)}
+</g>
+<g class="telon">
+  <rect y="0" width="360" height="612" fill="url(#D_pers)"/>
+  <rect y="596" width="360" height="16" fill="#26282b" stroke="#111"/>
+  <rect x="60" y="600" width="26" height="6" rx="3" fill="#0e0f10"/><rect x="274" y="600" width="26" height="6" rx="3" fill="#0e0f10"/>
+  <path d="M174 604 Q174 592 180 592 Q186 592 186 604" fill="none" stroke="#8f8f8f" stroke-width="2.4"/>
+  <rect x="171" y="603" width="18" height="15" rx="2" fill="#a98a3c"/>
+  <path d="M0 0 L360 0 L360 140 L0 380 Z" fill="#fff" opacity=".02"/>
+</g>
+<rect y="0" width="360" height="40" fill="#141516"/><line x1="0" y1="40" x2="360" y2="40" stroke="#2b2c2e"/>`;
+
+// ------------------------------------------------------------------ los textos
+const PASOS = [['cerrado', 'Telón'], ['rendija', 'Rendija'], ['abierto', 'Abierto'], ['roto', 'Se rompe'], ['final', 'Final']];
+const DUR = [2600, 2600, 5200, 5200, 4200];
+const MUNDOS = [
+  { id: 'B', nombre: 'El espejo tapado', dib: dibB,
+    linea: 'Ella es tu reflejo. Hasta que deja de serlo.',
+    pasos: [
+      ['La espera', 'Un cuarto a oscuras y un espejo grande, de marco viejo, tapado con una sábana, como se tapan los espejos en una casa de luto. Nada más. Silencio de casa.'],
+      ['Alguien se asoma', 'La sábana se levanta desde abajo, como si alguien del otro lado la corriera: se ve un pedazo del vidrio y algo que se mueve. Es la rendija que hoy usa Richie para espiar.'],
+      ['Acto 1: te copia', 'La sábana cae al piso. En el espejo hay un cuarto con una lamparita colgando y ella parada donde estarías vos: hace lo mismo que vos, como un reflejo. Richie, el gorro, es el único que habla.'],
+      ['Acto 2: la revelación', 'El reflejo deja de copiarte. El vidrio se raja desde donde ella apoya la mano, la lamparita se hamaca sola, el cuarto se enfría. Las fallas del tracking pasan a ser "el espejo está mal".'],
+      ['Final', 'La sábana sube sola y vuelve a tapar el espejo. El cuarto queda como al principio, como si nada.']],
+    porque: 'Es el que más se parece a lo que pasa de verdad en la cabina: una persona sola en una caja oscura frente a una pantalla vertical que la copia. Eso ya es un espejo. La revelación es el miedo más conocido que hay con los espejos (que el reflejo no te siga), así que se entiende sin explicar nada.',
+    hacer: 'Modelar: el marco del espejo, el cuarto reflejado (paredes, piso, lamparita) y la sábana con tela simulada (caída y subida, en Blender). Sonido: casa vacía, tela que cae, vidrio que cruje.' },
+  { id: 'A', nombre: 'La caja de música', dib: dibA,
+    linea: 'Ella es la figurita de la caja. Richie le da cuerda.',
+    pasos: [
+      ['La espera', 'Una caja cerrada, de laca negra con filetes dorados y el nombre grabado. Se oye el tic-tac de la cuerda y la llave del costado gira sola.'],
+      ['Alguien se asoma', 'La tapa se levanta un dedo: sale luz tibia y un pedacito de musiquita. Es la rendija.'],
+      ['Acto 1: te copia', 'Se abre. Adentro: terciopelo bordó acolchado, un espejito ovalado y ella parada en la base que gira, como la bailarina de la caja. Te copia al compás. Abajo se ve el mecanismo (el cilindro con púas).'],
+      ['Acto 2: la revelación', 'Se acaba la cuerda: la música se desafina y frena, la base se ladea, el terciopelo se raja, el espejito se quiebra. Ella sigue moviéndose sin música, y eso es lo que da miedo.'],
+      ['Final', 'Ella se dobla hacia adentro y la tapa se cierra de golpe. La llave deja de girar.']],
+    porque: 'La muñeca manejada por un mecanismo es exactamente el titiritero, sin hilos ni circo. La música da el ritmo de los juegos del acto 1 y que se desafine es una forma clarísima de anunciar que algo se rompe.',
+    hacer: 'Modelar: el interior de la caja (terciopelo, espejito, base, mecanismo) y la tapa. Música: una melodía de caja de música que se pueda frenar y desafinar. Ojo: el bordó y el dorado son los colores con más presencia de los cuatro.' },
+  { id: 'C', nombre: 'Transmisión de madrugada', dib: dibC,
+    linea: 'Un programa de tele a las 3 de la mañana que nadie debería estar mirando.',
+    pasos: [
+      ['La espera', 'La carta de ajuste de un canal viejo, en grises, con el pitido del tono de prueba. "Canal 0 · aguarde". Un reloj que marca las 3:47.'],
+      ['Alguien se asoma', 'La imagen pierde la vertical y se parte al medio: por la raya se ve el estudio. Es la rendija.'],
+      ['Acto 1: te copia', 'Un estudio de tele vacío: fondo negro curvo, un reflector de pie, cables en el piso y la luz roja de AL AIRE. Ella es la invitada del programa y Richie, el conductor que te habla a vos.'],
+      ['Acto 2: la revelación', 'Se cae la señal: nieve, franjas, la imagen se corre. El cartel pasa a SIN SEÑAL, pero ella sigue ahí, moviéndose sola. Las fallas del acto 2 ya son de la tele: no hay que inventarles una excusa.'],
+      ['Final', 'La imagen se achica a una raya y después a un punto blanco que se apaga, como un televisor viejo.']],
+    porque: 'Es el que mejor calza con el tono "Wii → negro" y con las fallas de pantalla que ya tiene la historia. Que Richie sea conductor de tele le da sentido a que hable todo el tiempo y te dé consignas.',
+    hacer: 'Modelar: el estudio (fondo curvo, reflector, cartel de AL AIRE). Lo demás (carta de ajuste, nieve, encendido y apagado) se hace en el programa. Ojo: es el más "de pantalla"; los otros tres se sienten más objeto.' },
+  { id: 'D', nombre: 'La vidriera', dib: dibD,
+    linea: 'Un local cerrado de noche. El maniquí te estaba esperando.',
+    pasos: [
+      ['La espera', 'La persiana metálica de un local, baja y con candado. Ruido de calle lejos.'],
+      ['Alguien se asoma', 'La persiana sube un palmo con ruido de chapa: sale luz de tubo y se ve el pie del pedestal. Es la rendija.'],
+      ['Acto 1: te copia', 'La vidriera: tubo fluorescente, el nombre en letras doradas pintado en el vidrio y ella, un maniquí sobre un pedestal con la etiqueta colgando. Vos sos el que mira la vidriera y el maniquí te imita. Richie es el sombrero en exhibición.'],
+      ['Acto 2: la revelación', 'El tubo titila y se apaga a medias, el vidrio se empaña con su aliento, aparecen marcas de manos del lado de adentro y una esquina del vidrio se raja.'],
+      ['Final', 'La persiana baja de golpe. Candado.']],
+    porque: 'El maniquí es una muñeca de tamaño real y el vidrio de la vidriera es la pantalla: la persona queda del lado de la calle. Tiene algo muy de Buenos Aires de noche.',
+    hacer: 'Modelar: la vidriera (marco, piso, pedestal, tubo), la persiana y el cajón. Sonido: calle, tubo que zumba, chapa. Ojo: el tubo fluorescente ilumina mucho y en la caja oscura puede lavar el negro; habría que usarlo bajo.' },
+];
+
+// ------------------------------------------------------------------ armado
+const caja = document.getElementById('caja'), nav = document.getElementById('mundos'), pasos = document.getElementById('pasos'), texto = document.getElementById('texto');
+const NS = 'http://www.w3.org/2000/svg';
+MUNDOS.forEach((m, i) => {
+  const s = document.createElementNS(NS, 'svg');
+  s.setAttribute('viewBox', '0 0 360 640'); s.setAttribute('class', m.id); s.dataset.s = 'cerrado';
+  s.innerHTML = m.dib(); caja.appendChild(s); m.svg = s;
+  const b = document.createElement('button'); b.innerHTML = `<b>${'ABCD'[i]}</b>${m.nombre}`; b.onclick = () => { parar(); elegir(i); }; nav.appendChild(b); m.btn = b;
+});
+PASOS.forEach(([k, n], i) => { const b = document.createElement('button'); b.textContent = n; b.onclick = () => { parar(); paso(i); }; pasos.appendChild(b); });
+let actual = 0, p = 0, timer = null;
+function elegir(i) {
+  actual = i; const m = MUNDOS[i];
+  MUNDOS.forEach((x, j) => { x.svg.classList.toggle('on', j === i); x.btn.classList.toggle('on', j === i); });
+  texto.innerHTML = `<h2>${m.nombre}</h2><p class="linea">${m.linea}</p>
+    <h3>Cómo va</h3><ol>${m.pasos.map((x, j) => `<li data-j="${j}"><b>${PASOS[j][1]} · ${x[0]}</b>${x[1]}</li>`).join('')}</ol>
+    <h3>Por qué va con la historia</h3><p>${m.porque}</p>
+    <h3>Qué habría que hacer</h3><p>${m.hacer}</p>`;
+  texto.querySelectorAll('li').forEach(li => li.onclick = () => { parar(); paso(+li.dataset.j); });
+  paso(0, true);
+}
+function paso(j, sinAnim) {
+  p = j; const s = MUNDOS[actual].svg;
+  if (sinAnim) { s.querySelectorAll('*').forEach(e => e.style.transition = 'none'); s.dataset.s = PASOS[j][0]; s.getBoundingClientRect(); requestAnimationFrame(() => s.querySelectorAll('*').forEach(e => e.style.transition = '')); }
+  else s.dataset.s = PASOS[j][0];
+  [...pasos.children].forEach((b, k) => b.classList.toggle('on', k === j));
+  texto.querySelectorAll('li').forEach((li, k) => li.classList.toggle('on', k === j));
+}
+function parar() { clearTimeout(timer); timer = null; document.getElementById('play').textContent = '▶ Reproducir de principio a fin'; }
+function seguir() { if (p >= PASOS.length - 1) { parar(); return; } paso(p + 1); timer = setTimeout(seguir, DUR[p]); }
+document.getElementById('play').onclick = () => {
+  if (timer) { parar(); return; }
+  paso(0, true); document.getElementById('play').textContent = '■ Parar'; timer = setTimeout(seguir, DUR[0]);
+};
+elegir(0);
+</script>
+</body>
+</html>
