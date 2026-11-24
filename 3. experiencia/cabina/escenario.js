@@ -3,8 +3,9 @@
 // (pantalla.js + cabina.css). El fondo es un canvas que three.js usa como fondo de la escena. Modos de luz:
 // - función: la lamparita prendida, luz tibia de costado sobre ella
 // - ensayo: además, un círculo de luz tibia en la pared del fondo, donde cae la sombra (estatuas)
-// - trabajo (revelación en adelante): el espejo "se rompe": puerta entreabierta, lamparita casi apagada, todo frío, y el
-//   vidrio rajado (las grietas están delante de ella: #cab.espejoRoto, en cabina.css)
+// - trabajo (discusión en adelante): puerta entreabierta, lamparita casi apagada, todo frío. v0.7: el vidrio ya no se
+//   raja acá: se raja con el golpe de tiesme (escena 6) y lo maneja pantalla.js (grietas, reparar, estallar)
+// - apagar (v0.7, "el interruptor" del final de Richie): todo se va casi a oscuras
 // La pared se puede ir a negro y "romper" (glitch). Reemplazar por el fondo 3D de Agustín cuando esté.
 // (Antes, hasta la v0.5.2: un teatrito de circo. Copia en _versiones/cabina_v0.5.2.)
 
@@ -43,7 +44,9 @@ export function crearEscenario(api) {
   scene.background = tex;
 
   // valores actuales y objetivos (cambian de a poco). oscuro = luz de trabajo (espejo roto); ensayo = luz del ensayo
-  const v = { negro: 0, glitch: 0, oscuro: 0, ensayo: 0 }, obj = { ...v }, vel = { negro: 1, glitch: 4, oscuro: 1, ensayo: 1 };
+  // v0.7: oscuro ya no raja el vidrio (las grietas las maneja pantalla.js, con el golpe de tiesme); apagado = cuánto
+  // se apaga todo (0 prendido, 1 casi a oscuras): lo usa "el interruptor" del final de Richie
+  const v = { negro: 0, glitch: 0, oscuro: 0, ensayo: 0, apagado: 0 }, obj = { ...v }, vel = { negro: 1, glitch: 4, oscuro: 1, ensayo: 1, apagado: 1 };
   const ir = (k, valor, seg) => { obj[k] = valor; vel[k] = seg > 0 ? Math.abs(valor - v[k]) / seg || 1 : Infinity; };
 
   // el cuarto se pasa a imagen una sola vez (normal y roto); hasta que esté, el fondo es negro
@@ -62,8 +65,7 @@ export function crearEscenario(api) {
   const ROTA = { hemi: 0.22, hcol: new THREE.Color(0x8090b0), key: 3.0, col: new THREE.Color(0xc8d6ff) };
   L.key.position.set(1.3, 2.0, 1.3);
 
-  const cab = document.getElementById('cab');
-  let rotoAntes = null, antes = '';
+  let antes = '';
   function dibujar() {
     g.globalAlpha = 1; g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
     if (img.normal) g.drawImage(img.normal, 0, 0);
@@ -78,7 +80,9 @@ export function crearEscenario(api) {
       const n = Math.round(v.glitch * 8);
       for (let i = 0; i < n; i++) { const y = Math.random() * H, h = 8 + Math.random() * 80, dx = (Math.random() - 0.5) * 160 * v.glitch; g.drawImage(cv, 0, y, W, h, dx, y, W, h); }
     }
-    if (v.negro > 0.001) { g.fillStyle = `rgba(0,0,0,${v.negro})`; g.fillRect(0, 0, W, H); }
+    const tapa = 1 - (1 - v.negro) * (1 - 0.8 * v.apagado);
+    if (tapa > 0.001) { g.fillStyle = `rgba(0,0,0,${tapa})`; g.fillRect(0, 0, W, H); }
+    if (img.frente) g.drawImage(img.frente, 0, 0); // el marco del espejo, cuando va detrás de ella (sale del espejo)
     tex.needsUpdate = true;
   }
 
@@ -87,13 +91,12 @@ export function crearEscenario(api) {
       const d = obj[k] - v[k], paso = vel[k] * dt;
       v[k] = Math.abs(d) <= paso ? obj[k] : v[k] + Math.sign(d) * paso;
     }
-    const k = v.oscuro, roto = k > 0.5;
-    if (roto !== rotoAntes) { cab?.classList.toggle('espejoRoto', roto); rotoAntes = roto; }
-    if (L.hemi) { L.hemi.intensity = (NORMAL.hemi + (ROTA.hemi - NORMAL.hemi) * k) * (1 - 0.3 * v.ensayo); L.hemi.color.copy(NORMAL.hcol).lerp(ROTA.hcol, k); }
-    L.key.intensity = NORMAL.key + (ROTA.key - NORMAL.key) * k;
+    const k = v.oscuro, luz = 1 - 0.88 * v.apagado;
+    if (L.hemi) { L.hemi.intensity = (NORMAL.hemi + (ROTA.hemi - NORMAL.hemi) * k) * (1 - 0.3 * v.ensayo) * luz; L.hemi.color.copy(NORMAL.hcol).lerp(ROTA.hcol, k); }
+    L.key.intensity = (NORMAL.key + (ROTA.key - NORMAL.key) * k) * luz;
     L.key.color.copy(NORMAL.col).lerp(ROTA.col, k);
     // el fondo se vuelve a subir a la placa solo si cambió algo
-    const firma = `${v.negro.toFixed(3)}|${k.toFixed(3)}|${v.ensayo.toFixed(3)}`;
+    const firma = `${v.negro.toFixed(3)}|${k.toFixed(3)}|${v.ensayo.toFixed(3)}|${v.apagado.toFixed(3)}`;
     if (sucio || v.glitch > 0.01 || firma !== antes) { dibujar(); antes = firma; sucio = false; }
   }
 
@@ -103,6 +106,18 @@ export function crearEscenario(api) {
     glitch: (valor, seg = 0.3) => ir('glitch', valor, seg),
     oscuro: (valor, seg = 1.5) => ir('oscuro', valor, seg),
     ensayo: (valor, seg = 1.2) => ir('ensayo', valor, seg),
+    apagar: (valor, seg = 0.3) => ir('apagado', valor, seg),
+    // v0.7: frente(svg) pinta ese dibujo (el marco del espejo) en el fondo, delante del cuarto y detrás de tiesme;
+    // frente(null) lo saca. Devuelve una promesa que se cumple cuando el dibujo ya está listo para pintarse.
+    frente: svg => {
+      if (!svg) { img.frente = null; sucio = true; return Promise.resolve(); }
+      return new Promise(res => {
+        const im = new Image();
+        im.onload = () => { const c = document.createElement('canvas'); c.width = W; c.height = H; c.getContext('2d').drawImage(im, 0, 0, W, H); img.frente = c; sucio = true; res(); };
+        im.onerror = () => { console.warn('[cabina] no se pudo dibujar el marco en el fondo'); res(); };
+        im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+      });
+    },
     estado: () => ({ ...v }),
   };
 }

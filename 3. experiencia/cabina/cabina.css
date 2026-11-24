@@ -13,8 +13,50 @@
 /* ---- el espejo: marco delante de ella (con las grietas de la revelación) y la sábana (el telón) ---- */
 #cabMarco, #cabTelon { inset: 0; }
 #cab .capa { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-#cabMarco .grietas { opacity: 0; transition: opacity 1s; }
-#cab.espejoRoto #cabMarco .grietas { opacity: 1; }
+/* v0.7: las grietas van por impactos (pantalla.js: grietas, reparar, estallar) */
+#cabMarco .grietas polyline, #cabMarco .grietas ellipse { fill: none; stroke: #e8eef5; stroke-opacity: .72; stroke-width: 1.15; stroke-linejoin: bevel; vector-effect: non-scaling-stroke; }
+#cabMarco .grietas polyline.fina { stroke-opacity: .42; stroke-width: .8; }
+#cabMarco .impacto { opacity: 0; }
+#cabMarco .impacto.on { opacity: 1; animation: cabRaja .18s steps(3) both; }
+@keyframes cabRaja { 0% { opacity: 0; } 40% { opacity: 1; stroke-width: 3; } 100% { opacity: 1; } }
+#cabMarco .rama { transition: opacity 1.1s ease .45s; }
+#cabMarco .rama polyline { transition: stroke .35s, stroke-opacity .35s, stroke-width .35s; }
+#cabMarco .rama.reparada { opacity: 0; }
+#cabMarco .rama.reparada polyline { stroke: #e6bd6a; stroke-opacity: 1; stroke-width: 2; }
+#cabMarco .impacto.cerrado .centro { opacity: 0; transition: opacity 1s .4s; }
+#cabMarco .astillas { opacity: 0; }
+#cabMarco .astillas polygon { fill: rgba(205, 220, 235, .16); stroke: #e8eef5; stroke-opacity: .55; stroke-width: .7; vector-effect: non-scaling-stroke; }
+#cabMarco.estallado .grietas, #cabMarco.estallado .reflejo { opacity: 0; }
+#cabMarco.estallado .astillas { opacity: 1; }
+/* v0.7: las cajas (el juego del final de Richie): dos cajas vacías y dos cuadrados que se llevan con la mano */
+#cabCajas { inset: 0; display: none; z-index: 2; }
+#cabCajas.visible { display: block; }
+#cabCajas .caja, #cabCajas .pieza { position: absolute; transform: translate(-50%, -50%); border-radius: 3px; box-sizing: border-box; }
+#cabCajas .riel { position: absolute; width: 0; border-left: calc(var(--u) * .18) dashed rgba(241,236,226,.28); transform: translateX(-50%); }
+#cabCajas .caja { width: calc(var(--u) * 11.5); height: calc(var(--u) * 11.5); border: calc(var(--u) * .28) dashed rgba(201,162,90,.9); transition: border-color .12s, box-shadow .12s;
+  background: linear-gradient(to top, rgba(230,189,106,.55) calc(var(--k, 0) * 100%), rgba(6,6,8,.4) 0); }
+#cabCajas .caja.dentro { border-color: #f1ece2; border-style: solid; box-shadow: 0 0 calc(var(--u) * 2) rgba(241,236,226,.6); }
+#cabCajas .caja.falla { border-color: #ff6a5a; border-style: solid; animation: cabCajaNo .3s; }
+@keyframes cabCajaNo { 25% { transform: translate(-58%, -50%); } 75% { transform: translate(-42%, -50%); } }
+#cabCajas .caja.llena { border-style: solid; border-color: #e6bd6a; background: rgba(6,6,8,.15); }
+#cabCajas .pieza { width: calc(var(--u) * 9); height: calc(var(--u) * 9); background: #c9a25a; box-shadow: 0 0 calc(var(--u) * 1.6) rgba(0,0,0,.65);
+  outline: calc(var(--k, 0) * var(--u) * .9) solid #f1ece2; transition: background .2s, transform .15s; }
+#cabCajas .pieza.agarrada { background: #f1ece2; transform: translate(-50%, -50%) scale(1.1); }
+#cabCajas .pieza.encajada { background: #e6bd6a; box-shadow: none; }
+/* v0.7: cortar (cuadrados que vuelan dentro del espejo, sus mitades, la estela de las manos) y el festejo del final */
+#cabVolando, #cabFestejo, #cabEstela { inset: 0; pointer-events: none; }
+#cabVolando i { position: absolute; aspect-ratio: 1; background: #c9a25a; border-radius: 3px; box-shadow: 0 0 calc(var(--u) * 1.4) rgba(0,0,0,.6);
+  transform: translate(-50%, -50%) rotate(var(--r, 0deg)) scale(calc(1 + var(--g, 0) * .16)); filter: brightness(calc(1 + var(--g, 0) * .9)); }
+#cabVolando i.mitad { aspect-ratio: 2 / 1; background: #e6bd6a; box-shadow: none; }
+#cabVolando i.grande { outline: calc(var(--u) * .45) solid #f1ece2; outline-offset: calc(var(--u) * -1.4); }
+#cabEstela polyline { fill: none; stroke: #f1ece2; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 1.5px #d6e4ff); }
+#cabFestejo i { position: absolute; left: 50%; top: 42%; width: calc(var(--u) * var(--s)); height: calc(var(--u) * var(--s)); background: var(--c); border-radius: 2px;
+  animation: cabFestejo var(--t) cubic-bezier(.12, .75, .3, 1) both; }
+@keyframes cabFestejo { 0% { transform: translate(-50%, -50%) scale(.2); opacity: 1; } 70% { opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--u) * var(--dx)), calc(-50% + var(--u) * var(--dy))) rotate(var(--r)); opacity: 0; } }
+#cabDestello { inset: 0; background: #eef4ff; opacity: 0; pointer-events: none; }
+#cabDestello.on { animation: cabDestello .9s ease-out both; }
+@keyframes cabDestello { 0% { opacity: .95; } 12% { opacity: .5; } 100% { opacity: 0; } }
 #cabTelon { --seg: 1.6s; }
 #cabTelon .tela { transform-origin: 0 0; transition: transform var(--seg) cubic-bezier(.6,0,.3,1); }
 #cabTelon.rendija .tela { transform: scaleY(.86); }                 /* se levanta desde abajo, como si la corrieran */

@@ -19,25 +19,73 @@ const ICONOS = {
   '🦅': TRAZO('<circle cx="12" cy="10" r="2"/><path d="M12 12v6M12 13.5 4.5 6M12 13.5 19.5 6M10 21.5l2-3.5 2 3.5"/>'),
   '🪞': TRAZO('<path d="M6 21.5V9a6 6 0 0 1 12 0v12.5z"/><path d="M9 12.5l3.5-3.5M10 17l5.5-5.5"/>'),
   '🙆': TRAZO('<circle cx="12" cy="8" r="2.4"/><path d="M12 10.5v7M3 12h18M9.5 21.5l2.5-4 2.5 4"/>'),
+  // v0.7 (los dos finales): golpear el vidrio · pasarle la mano · elegir entre las dos · mano arriba / abajo
+  '✋': TRAZO('<circle cx="12" cy="12" r="3.4"/><path d="M12 2.5v3.5M12 18v3.5M2.5 12H6M18 12h3.5M5.3 5.3l2.5 2.5M16.2 16.2l2.5 2.5M5.3 18.7l2.5-2.5M16.2 7.8l2.5-2.5"/>'),
+  '🤚': TRAZO('<path d="M3 8.5c3-3 6 3 9 0s6-3 9 0M3 15.5c3-3 6 3 9 0s6-3 9 0"/>'),
+  '⚖': TRAZO('<circle cx="6.5" cy="12" r="2"/><path d="M6.5 6v2M6.5 16v2M1.5 12h1.6M9.9 12h1.2M3 8.5l1.2 1.2M8.8 14.3 10 15.5M3 15.5l1.2-1.2M8.8 9.7 10 8.5M14 9.5c1.4-1.5 2.8 1.5 4.2 0s2.8-1.5 4.2 0M14 14.5c1.4-1.5 2.8 1.5 4.2 0s2.8-1.5 4.2 0"/>'),
+  '↕': TRAZO('<path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/>'),
+  '⟋': TRAZO('<rect x="6" y="6" width="12" height="12" transform="rotate(12 12 12)"/><path d="M2.5 20.5 21.5 3.5" stroke-width="2"/>'), // cortar el cuadrado
+  '▢': TRAZO('<rect x="3" y="3" width="11" height="11" stroke-dasharray="2.2 2"/><rect x="13" y="13" width="8" height="8" fill="currentColor" stroke="none"/><path d="M16.5 11.5 11 6M11 9.5V6h3.5"/>'), // llevar el cuadrado a la caja
 };
 const dibujoIcono = s => ICONOS[s] || ICONOS[(s || '').replace(/️/g, '')] || (s ? String(s).replace(/</g, '&lt;') : '');
 
-// v0.6: el espejo. Marco (delante de tiesme; las grietas se ven con #cab.espejoRoto, desde la revelación) y la sábana
-// que lo tapa (el telón). Dibujados en el cuadro 9:16 (360 × 640).
-const rayos = (cx, cy, pts, op = 0.6) => pts.map(p => `<polyline points="${cx},${cy} ${p}" fill="none" stroke="#e8eef5" stroke-opacity="${op}" stroke-width="1"/>`).join('');
+// v0.6: el espejo. Marco (delante de tiesme) y la sábana que lo tapa (el telón). Dibujados en el cuadro 9:16 (360 × 640).
+// v0.7: las grietas van por IMPACTOS (antes un solo dibujo que aparecía en la discusión). El impacto 1 es el golpe de
+// tiesme (escena 6) y tiene 3 ramas, que en el final de Richie se reparan de a una; los impactos 2 y 3 son los golpes
+// de la persona en el final libre; después el vidrio estalla y quedan las astillas pegadas al marco.
+function azar(semilla) { let s = semilla; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
+// una rama: varias líneas quebradas que salen del centro (0,0) dentro de un sector (ángulos en grados, 0 = derecha, 90 = abajo)
+function rama(r, a0, a1, largo, n = 3) {
+  let d = '', sx = 0, sy = 0, k = 0;
+  for (let i = 0; i < n; i++) {
+    let a = (a0 + (a1 - a0) * (i + 0.5 + (r() - 0.5) * 0.5) / n) * Math.PI / 180, x = 0, y = 0;
+    const L = largo * (0.65 + r() * 0.6), tramos = 3 + (r() * 3 | 0), pts = ['0,0'];
+    for (let j = 0; j < tramos; j++) {
+      a += (r() - 0.5) * 0.55; const l = L / tramos * (0.7 + r() * 0.6);
+      x += Math.cos(a) * l; y += Math.sin(a) * l; pts.push(`${x.toFixed(0)},${y.toFixed(0)}`);
+      if (j === 1) { sx += x; sy += y; k++; }
+      if (j >= 1 && r() < 0.45) { const b = a + (r() < 0.5 ? 1 : -1) * (0.5 + r() * 0.5), m = 14 + r() * 30; d += `<polyline class="fina" points="${x.toFixed(0)},${y.toFixed(0)} ${(x + Math.cos(b) * m).toFixed(0)},${(y + Math.sin(b) * m).toFixed(0)}"/>`; }
+    }
+    d += `<polyline points="${pts.join(' ')}"/>`;
+  }
+  return { d, x: sx / k, y: sy / k };
+}
+const R1 = azar(7), R2 = azar(23), R3 = azar(41);
+const RAMAS = [rama(R1, -115, -5, 230), rama(R1, 130, 245, 210), rama(R1, 20, 115, 250)]; // arriba a la derecha · izquierda · abajo
+const IMPACTO = [
+  { x: 236, y: 300, d: RAMAS.map((m, i) => `<g class="rama r${i + 1}">${m.d}</g>`).join('') + '<ellipse class="centro" cx="0" cy="0" rx="8" ry="8"/>' },
+  { x: 112, y: 214, d: rama(R2, 0, 360, 190, 8).d + '<ellipse cx="0" cy="0" rx="7" ry="7"/>' },
+  { x: 168, y: 452, d: rama(R3, 0, 360, 220, 9).d + '<ellipse cx="0" cy="0" rx="10" ry="10"/>' },
+];
+// astillas que quedan en el marco cuando el vidrio estalla (triángulos hacia adentro, por todo el borde del arco)
+const ASTILLAS = (() => {
+  const r = azar(97), borde = [];
+  for (let y = 640; y > 150; y -= 18 + r() * 26) borde.push([18, y, 1, 0]);
+  for (let t = 0.04; t < 0.97; t += 0.035 + r() * 0.04) { const u = 1 - t, x = u * u * 18 + 2 * u * t * 18 + t * t * 180, y = u * u * 152 + 2 * u * t * 20 + t * t * 20; borde.push([x, y, 0.6, 0.8]); }
+  for (let t = 0.03; t < 0.96; t += 0.035 + r() * 0.04) { const u = 1 - t, x = u * u * 180 + 2 * u * t * 342 + t * t * 342, y = u * u * 20 + 2 * u * t * 20 + t * t * 152; borde.push([x, y, -0.6, 0.8]); }
+  for (let y = 150; y < 640; y += 18 + r() * 26) borde.push([342, y, -1, 0]);
+  return borde.map(([x, y, nx, ny]) => { const l = 10 + r() * 34, w = 6 + r() * 10, tx = -ny, ty = nx, c = (r() - 0.5) * 14;
+    return `<polygon points="${(x - tx * w).toFixed(0)},${(y - ty * w).toFixed(0)} ${(x + tx * w).toFixed(0)},${(y + ty * w).toFixed(0)} ${(x + nx * l + tx * c).toFixed(0)},${(y + ny * l + ty * c).toFixed(0)}"/>`; }).join('');
+})();
 const MARCO = `<svg class="capa" viewBox="0 0 360 640" preserveAspectRatio="none">
-  <defs><linearGradient id="cabMarcoPlata" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8f949a"/><stop offset=".3" stop-color="#383b40"/><stop offset=".55" stop-color="#a3a8ad"/><stop offset="1" stop-color="#26282c"/></linearGradient></defs>
+  <defs><linearGradient id="cabMarcoPlata" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8f949a"/><stop offset=".3" stop-color="#383b40"/><stop offset=".55" stop-color="#a3a8ad"/><stop offset="1" stop-color="#26282c"/></linearGradient>
+  <clipPath id="cabVidrio"><path d="M18 640 L18 152 Q18 20 180 20 Q342 20 342 152 L342 640 Z"/></clipPath></defs>
+  <g class="vidrio" clip-path="url(#cabVidrio)">
+    <path class="reflejo" d="M18 330 L150 20 L190 20 L18 420 Z" fill="#fff" opacity=".03"/>
+    <g class="grietas">${IMPACTO.map((m, i) => `<g class="impacto i${i + 1}" transform="translate(${m.x} ${m.y})">${m.d}</g>`).join('')}</g>
+    <g class="astillas">${ASTILLAS}</g>
+  </g>
   <path fill-rule="evenodd" fill="#060607" d="M0 0 H360 V640 H0 Z M4 640 L4 146 Q4 4 180 4 Q356 4 356 146 L356 640 Z"/>
   <path fill-rule="evenodd" fill="url(#cabMarcoPlata)" d="M4 640 L4 146 Q4 4 180 4 Q356 4 356 146 L356 640 Z M18 640 L18 152 Q18 20 180 20 Q342 20 342 152 L342 640 Z"/>
   <path fill="none" stroke="#000" stroke-opacity=".6" stroke-width="1.5" d="M18 640 L18 152 Q18 20 180 20 Q342 20 342 152 L342 640"/>
   <path fill="none" stroke="#c8ccd2" stroke-opacity=".35" stroke-width=".8" d="M10 640 L10 148 Q10 11 180 11 Q350 11 350 148 L350 640"/>
-  <path d="M162 7 Q180 -3 198 7 Q189 16 180 13 Q171 16 162 7 Z" fill="#b9bec4"/>
-  <path d="M18 330 L150 20 L190 20 L18 420 Z" fill="#fff" opacity=".03"/>
-  <g class="grietas">
-    ${rayos(236, 300, ['330,180', '342,300', '320,420', '270,560', '196,470', '120,400', '150,290', '206,190', '250,40'])}
-    ${rayos(330, 180, ['342,140', '300,120'], 0.45)}${rayos(120, 400, ['18,380', '60,470'], 0.45)}
-    <ellipse cx="236" cy="300" rx="9" ry="9" fill="none" stroke="#e8eef5" stroke-opacity=".5"/>
-  </g></svg>`;
+  <path d="M162 7 Q180 -3 198 7 Q189 16 180 13 Q171 16 162 7 Z" fill="#b9bec4"/></svg>`;
+// v0.7 (23/11, "que tiesme salga del propio espejo"): el mismo marco ya estallado (sin grietas, con las astillas) como
+// dibujo suelto. Cuando ella sale, el escenario lo pinta en el FONDO y esta capa se esconde: así el marco queda detrás
+// de ella y se la ve cruzarlo (esta capa va siempre delante de la imagen 3D).
+const MARCO_ATRAS = MARCO.replace('<svg class="capa"', '<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1280"')
+  .replace(/<path class="reflejo"[^>]*\/>/, '')
+  .replace(/<g class="grietas">[\s\S]*?<g class="astillas">/, '<g fill="rgba(205,220,235,.16)" stroke="#e8eef5" stroke-opacity=".55" stroke-width=".7">');
 const SABANA = `<svg class="capa" viewBox="0 0 360 640" preserveAspectRatio="none">
   <defs>
     <linearGradient id="cabSabana" x1="0" x2="1"><stop offset="0" stop-color="#6c6963"/><stop offset=".12" stop-color="#94918a"/><stop offset=".22" stop-color="#75726c"/><stop offset=".38" stop-color="#9c9890"/><stop offset=".5" stop-color="#7b7871"/><stop offset=".64" stop-color="#99958d"/><stop offset=".78" stop-color="#726f69"/><stop offset=".9" stop-color="#908c84"/><stop offset="1" stop-color="#64615c"/></linearGradient>
@@ -216,6 +264,94 @@ export function crearPantalla(api, guion) {
   // v0.6 el telón es la sábana del espejo: cerrada lo tapa, rendija se levanta desde abajo, abierta cae al piso y al
   // cerrarse sube sola (cabina.css)
   const telon = (estado, seg = 1.6) => { v2.telon.style.setProperty('--seg', seg + 's'); v2.telon.classList.toggle('abierto', estado === true); v2.telon.classList.toggle('rendija', estado === 'rendija'); };
+  // ---------------------------------------------------------------- v0.7: el vidrio del espejo
+  // grietas(0) sano · grietas(1, {x, y}) el golpe de tiesme (x, y de 0 a 1: dónde pegó) · grietas(2) y grietas(3) los
+  // golpes de la persona · estallar() el vidrio se va (quedan las astillas) · reparar(i) cierra la rama i (0 a 2) del
+  // golpe de tiesme, en dorado · puntosGrieta() dónde está cada rama en la pantalla (0 a 1), para pasarle la mano
+  const destello = mk('cabDestello');
+  const vid = { nivel: 0, x: IMPACTO[0].x, y: IMPACTO[0].y, reparadas: new Set() };
+  const imp = [1, 2, 3].map(n => q(v2.marco, '.i' + n));
+  function grietas(nivel, en) {
+    if (en) { vid.x = Math.max(70, Math.min(290, en.x * 360)); vid.y = Math.max(150, Math.min(470, en.y * 640)); }
+    if (nivel === 0 || en) imp[0].setAttribute('transform', `translate(${nivel === 0 ? IMPACTO[0].x : vid.x.toFixed(0)} ${nivel === 0 ? IMPACTO[0].y : vid.y.toFixed(0)})`);
+    if (nivel === 0) { vid.x = IMPACTO[0].x; vid.y = IMPACTO[0].y; }
+    if (nivel === 0 || nivel > vid.nivel) { vid.reparadas.clear(); imp[0].classList.remove('cerrado'); for (const g of v2.marco.querySelectorAll('.rama')) g.classList.remove('reparada'); }
+    vid.nivel = nivel;
+    imp.forEach((g, i) => g.classList.toggle('on', nivel > i));
+    v2.marco.classList.remove('estallado'); v2.marco.classList.toggle('sano', nivel === 0);
+  }
+  function reparar(i) {
+    vid.reparadas.add(i); q(v2.marco, '.r' + (i + 1))?.classList.add('reparada');
+    if (vid.reparadas.size >= RAMAS.length) q(v2.marco, '.i1 .centro')?.parentNode.classList.add('cerrado');
+  }
+  function estallar() {
+    v2.marco.classList.add('estallado'); vid.nivel = 4;
+    destello.classList.remove('on'); void destello.offsetWidth; destello.classList.add('on');
+  }
+  // ---------------------------------------------------------------- v0.7: las cajas (el juego del final de Richie)
+  // cajas({ riel: [y0, y1], cajas: [{ x, y, k, llena, dentro, falla }], piezas: [{ x, y, agarrada, encajada }] }) las
+  // dibuja (x, y de 0 a 1); cajas(null) las saca. Dos cajas fijas y dos cuadrados que suben y bajan por un riel. En
+  // cada caja: dentro = el cuadrado está pasando por ella (se ilumina) · falla = la mano entró a destiempo (rojo) ·
+  // k = cuánto va de sostener la mano, de 0 a 1 (se llena desde abajo) · llena = ya está trabado.
+  const cj = mk('cabCajas', '<div class="riel"></div><div class="riel"></div><div class="caja"></div><div class="caja"></div><div class="pieza"></div><div class="pieza"></div>');
+  const pct = v => (v * 100).toFixed(1) + '%';
+  function cajas(o) {
+    cj.classList.toggle('visible', !!o);
+    if (!o) return;
+    const cs = cj.querySelectorAll('.caja'), ps = cj.querySelectorAll('.pieza'), rs = cj.querySelectorAll('.riel');
+    o.cajas.forEach((c, i) => {
+      if (!cs[i]) return;
+      cs[i].style.left = pct(c.x); cs[i].style.top = pct(c.y); cs[i].style.setProperty('--k', (c.k || 0).toFixed(3));
+      cs[i].classList.toggle('llena', !!c.llena); cs[i].classList.toggle('dentro', !!c.dentro && !c.llena); cs[i].classList.toggle('falla', c.falla > 0);
+      if (rs[i]) { rs[i].style.display = o.riel ? '' : 'none'; if (o.riel) { rs[i].style.left = pct(c.x); rs[i].style.top = pct(o.riel[0]); rs[i].style.height = pct(o.riel[1] - o.riel[0]); } }
+    });
+    o.piezas.forEach((p, i) => {
+      if (!ps[i]) return;
+      ps[i].style.left = pct(p.x); ps[i].style.top = pct(p.y); ps[i].style.setProperty('--k', (p.k || 0).toFixed(2));
+      ps[i].classList.toggle('agarrada', !!p.agarrada); ps[i].classList.toggle('encajada', !!p.encajada);
+    });
+  }
+  // ---------------------------------------------------------------- v0.7: cortar (el último juego del final de Richie)
+  // volando([{ x, y, tam, rot, estado, op, golpe }]) dibuja los cuadrados que vuelan (x, y de 0 a 1; tam en anchos de
+  // pantalla; rot en grados; estado: '' entero · 'mitad' una mitad ya cortada · 'grande' el del final; op = opacidad;
+  // golpe = de 0 a 1, el sacudón del grande cuando lo cortan). Van dentro del espejo: detrás del marco.
+  const vol = mk('cabVolando'); cab.insertBefore(vol, v2.marco);
+  function volando(lista) {
+    while (vol.children.length < lista.length) vol.appendChild(document.createElement('i'));
+    for (let i = 0; i < vol.children.length; i++) {
+      const el = vol.children[i], o = lista[i];
+      if (!o) { el.style.display = 'none'; continue; }
+      el.style.display = ''; el.style.left = pct(o.x); el.style.top = pct(o.y); el.style.width = pct(o.tam); el.className = o.estado || '';
+      el.style.opacity = o.op ?? 1; el.style.setProperty('--r', (o.rot || 0).toFixed(0) + 'deg'); el.style.setProperty('--g', (o.golpe || 0).toFixed(2));
+    }
+  }
+  // estela([rastroMano0, rastroMano1]): la línea que deja cada mano al cortar (rastro = [{ x, y, v }], v = velocidad)
+  const est = mk('cabEstela', '<svg class="capa" viewBox="0 0 100 177.78" preserveAspectRatio="none"><polyline/><polyline/></svg>');
+  cab.insertBefore(est, v2.marco);
+  function estela(rastros) {
+    est.querySelectorAll('polyline').forEach((pl, i) => {
+      const r = rastros?.[i] || [];
+      pl.setAttribute('points', r.map(p => `${(p.x * 100).toFixed(1)},${(p.y * 177.78).toFixed(1)}`).join(' '));
+      pl.style.opacity = r.length > 1 ? Math.min(1, r[r.length - 1].v / 1.1).toFixed(2) : 0;
+    });
+  }
+  // festejo(): estalla una lluvia de cuadraditos dorados desde el centro (va detrás de la sábana: cae sobre el festejo)
+  const fest = mk('cabFestejo'); cab.insertBefore(fest, v2.telon);
+  let festT = 0;
+  function festejo(n = 54) {
+    fest.innerHTML = '';
+    for (let i = 0; i < n; i++) {
+      const el = document.createElement('i'), a = Math.random() * Math.PI * 2, r = 18 + Math.random() * 52;
+      for (const [k, v] of Object.entries({ '--dx': (Math.cos(a) * r * 0.62).toFixed(1), '--dy': (Math.sin(a) * r - 8 + Math.random() * 30).toFixed(1), '--s': (1.2 + Math.random() * 2.6).toFixed(1),
+        '--r': Math.round((Math.random() * 2 - 1) * 540) + 'deg', '--t': (1.1 + Math.random() * 1.1).toFixed(2) + 's', '--c': ['#e6bd6a', '#c9a25a', '#f1ece2', '#d6e4ff'][i % 4] })) el.style.setProperty(k, v);
+      fest.appendChild(el);
+    }
+    clearTimeout(festT); festT = setTimeout(() => { fest.innerHTML = ''; }, 2600);
+  }
+  // marcoAtras(true): esconde el marco de adelante y devuelve su dibujo, para que el escenario lo pinte en el fondo
+  // (ella sale del espejo y lo cruza); marcoAtras(false) lo vuelve a poner adelante
+  const marcoAtras = on => { v2.marco.style.visibility = on ? 'hidden' : ''; return on ? MARCO_ATRAS : null; };
+  const puntosGrieta = () => RAMAS.map((m, i) => ({ i, x: Math.max(0.16, Math.min(0.84, (vid.x + m.x) / 360)), y: Math.max(0.2, Math.min(0.8, (vid.y + m.y) / 640)), reparada: vid.reparadas.has(i) }));
   function cartel(texto, { brilla = false } = {}) {
     if (texto === null) { v2.cartel.classList.remove('visible'); return; }
     q(v2.cartel, '.txt').textContent = texto; v2.cartel.classList.add('visible'); v2.cartel.classList.toggle('brilla', brilla);
@@ -287,12 +423,13 @@ export function crearPantalla(api, guion) {
   // estado limpio (al saltar de paso)
   function limpiar() {
     indicador(null); estatua(null, null); puntaje(null); sinVineta(); glitch(0); ojo(false); titulo(false);
-    foco(null); medidor(null); anillo(null); botones(null); criptico(null); selfie(null); puntero(0, 0, false);
+    foco(null); medidor(null); anillo(null); botones(null); criptico(null); selfie(null); puntero(0, 0, false); cajas(null); volando([]); estela(null);
   }
 
   return {
     titulo, indicador, marca, estatua, puntaje, vineta, sinVineta, negro, ojo, ojoX, temblor, glitch, panel, panelHTML, verPausa, sonidoAviso, cuadro, limpiar, hilosCanvas: el.hilos, dpr, romper,
     telon, cartel, foco, medidor, anillo, botones, botonEn, cargaBoton, tomarClic, puntero, criptico, selfie, pixelar,
+    grietas, reparar, estallar, puntosGrieta, marcoAtras, cajas, volando, estela, festejo, vidrio: () => vid.nivel,
     pixelando: () => performance.now() < pixHasta,
   };
 }

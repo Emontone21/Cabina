@@ -46,7 +46,43 @@ Antes y después de los actos hay dos estados: **Espera** y **Reinicio**.
 
 ---
 
-## Cómo termina ahora: "¡CAMBIO!" (5/11, elegido por Agustín)
+## Cómo termina ahora: EL VIDRIO Y LOS DOS FINALES (23/11, pedido por Agustín)
+Desde el 22/11 el lugar ya no es un circo: **tiesme está dentro de un espejo** (marco plateado en arco; detrás de ella,
+el cuarto reflejado con una lamparita; el telón es una sábana gris que tapa el espejo). La música es una sola, de
+misterio y minimalista, de principio a fin. Las frases que hablan de "función", "número" o "telón" son de la versión de
+circo y están para reescribir.
+- **El vidrio se rompe con el golpe de ella.** Después de la discusión se dan cuenta de que la persona los escucha;
+  tiesme, con vergüenza, se acerca al vidrio y lo golpea: al segundo golpe **el vidrio se raja**. Richie: "…Lo rajaste.
+  Rajaste el espejo." tiesme, a la persona: "¿Hola? … Perdón. No es siempre así." Richie: "Es siempre así."
+- **La elección** (sin menú ni botones: decide el primer gesto de la persona). tiesme mira la grieta: "Si se rompe del
+  todo, salgo." Le pide a la persona: "Pegale al vidrio. Con la palma, fuerte." Richie pide lo contrario: "Pasale la
+  mano por arriba, despacito, y se arregla. Y todo vuelve a ser como antes." Si la persona no hace nada, Richie decide
+  por ella: "¿No elegís? Entonces elijo yo. Como siempre."
+- **Final 1, tiesme libre**: la persona golpea el vidrio con la palma hacia la pantalla; ella pega del otro lado a la
+  vez; Richie protesta ("¡Ese espejo es una antigüedad!"). Al tercer golpe el vidrio **estalla**, vuelve la luz tibia.
+  tiesme: "Gracias." Richie: "¿Cómo gracias? ¿Y yo? ¡Yo voy arriba!" tiesme: "Vos venís conmigo. Pero ahora elijo yo."
+  **Sale del propio espejo**: apoya las manos en el marco, lo cruza hacia la persona, la mira un momento de muy cerca
+  y se va pasando a su lado. Queda el marco vacío con las astillas, y la sábana lo tapa.
+- **Final 2, Richie con el control**: la persona le pasa la mano a las tres ramas de la grieta y se cierran, en dorado.
+  Con cada una tiesme pierde algo: los brazos ("Los brazos… no los siento."), el cuerpo ("Richie. Por favor.") y la
+  cara. Vuelve a ser la muñeca del principio, que copia a la persona. Richie: "Listo. Como nuevo. Acá nadie se mueve
+  sola." Y para demostrarlo, **las cajas**: a cada lado de ella hay una caja, y un cuadrado que sube y baja pasando por
+  la caja. La persona tiene que atraparlo con la mano justo cuando está dentro de la caja; pero el cuadrado tiene
+  vida propia: quiere irse para arriba o para abajo, y hay que ir corrigiéndolo con la mano para que no se escape
+  hasta que queda trabado. Si la persona entra a destiempo o se le escapa, Richie la reta ("¡Tarde!", "¡Se te fue!"). Cada cuadrado que queda trabado le traba a tiesme un
+  lado del cuerpo,
+  hasta que queda derecha y rígida, "en su lugar". Richie: "Cada cosa en su caja… Listo. Todo en su lugar." Y el
+  cierre es un juego rápido y divertido, **cortar**: "¡Y ahora, a probarla! ¡Cortá todo lo que vuele!" tiesme copia a
+  la persona y, con sus manos, corta en el aire los cuadrados dorados que saltan dentro del espejo, cada vez más
+  seguidos; al final, uno grande ("¡El grande! ¡Dale, dale, dale!"). Termina arriba, con festejo: "¡Impecable! ¡La
+  manejás mejor que yo!", y la sábana cae de golpe. (Agustín quiere que este final deje a la
+  gente con ganas de más; el tono oscuro queda en las grietas y las cajas, y el cierre es de juego.)
+- **Lo que tiene que quedar** (sin decirlo): la persona empezó obedeciendo a Richie sin saberlo; al final tiene que
+  elegir a quién escucha, con el cuerpo, y lo que elige tiene consecuencias. No elegir también es elegir.
+- Textos provisorios (los escribió Claude para poder verlo). Ya no están: "¡Cambio!" y el águila del final (el águila
+  queda en el ensayo y la revelación).
+
+## El final anterior: "¡CAMBIO!" (5/11; se sacó el 23/11, está en `_versiones/cabina_v0.6/`)
 Después de que se dan cuenta de que la persona los escucha ("Perdón. No es siempre así." / "Es siempre así."), Richie
 corta: "Bueno, basta de charla. ¡Función!". Vuelven la luz y la música alegre. tiesme propone un juego: "Yo te copio, y
 después vos a mí".

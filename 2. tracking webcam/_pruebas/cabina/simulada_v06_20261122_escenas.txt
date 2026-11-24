@@ -1,0 +1,15 @@
+﻿Partida simulada (persona del demo) — cabina v0.6, el espejo
+Duración: 4:07
+
+Minuto  Escena
+  0:00  espera · Espera (telón cerrado)
+  0:00  1 · Presentación
+  0:17  2 · Calentamiento (Richie dice)
+  1:08  3 · Ensayo (estatuas)
+  1:43  4 · Revelación
+  1:58  5 · Discusión
+  2:19  6 · Registran que estás
+  2:53  7 · ¡Cambio! (¿quién copia a quién?)
+  3:51  fin · Fin
+  4:03  espera · Espera (telón cerrado)
+  4:03  1 · Presentación

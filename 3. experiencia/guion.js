@@ -8,6 +8,9 @@
 // la cara; después discuten y registran que estás). v0.5: el final es el juego "¡CAMBIO!": se alternan "te copia"
 // (ella te copia) y "copiala" (ella hace una pose y vos la copiás), cada vez más rápido, y termina con el águila entre
 // los tres. Lo que se sacó quedó en _versiones/ (botones, críptico y selfie en cabina_v0.2.1; los hilos en cabina_v0.3).
+// v0.7 (23/11): el vidrio del espejo se raja con el golpe de tiesme y la persona ELIGE EL FINAL sin menú: pegarle al
+// vidrio (final libre: se rompe y ella se va) o pasarle la mano (final de Richie: se repara, ella vuelve a ser muñeca y
+// "el interruptor"). "¡Cambio!" y el águila del final quedaron en _versiones/cabina_v0.6.
 //
 // - Los tiempos están en segundos.
 // - Cada frase tiene un CÓDIGO. Si un código tiene varias frases, se elige una al azar (sin repetir la anterior).
@@ -20,7 +23,7 @@
 // =====================================================================================================================
 
 export default {
-  version: 'cabina v0.6 (el espejo · el número de tiesme · ¡cambio!)',
+  version: 'cabina v0.7 (el espejo · dos finales)',
 
   // De qué lado de la TELE está la puerta de la cabina (por ahí se asoma tiesme al llegar).
   puerta: 'izquierda', // 'izquierda' o 'derecha'
@@ -100,39 +103,67 @@ export default {
   sombra: { x: 0, y: 1.55, atras: 1.2, escala: 0.7, plano: 0.5, bajar: 0.24, borde: 4,
     colorSombra: '#14060a', opSombra: 0.82, colorFigura: '#ffd27a', opFigura: 0.42 },
 
-  // ---------------------------------------------------------------- 5 DISCUSIÓN + 6 REGISTRAN QUE ESTÁS
+  // ---------------------------------------------------------------- 5 DISCUSIÓN + 6 REGISTRAN QUE ESTÁS (acá se raja el vidrio)
   registro: {
     manoSola: 1.2,         // cuánto se mueve la mano de ella por tu culpa (su último hilo)
     esperaMovimiento: 6,   // si no te movés en estos segundos, igual se dan cuenta
   },
   pollito: { activo: true, dur: 12, aVidrio: 5 }, // se acerca al vidrio SOLO cuando no la mirás (por vergüenza)
 
-  // ---------------------------------------------------------------- 7 ¡CAMBIO! (v0.5): ¿quién copia a quién?
-  cambio: {
-    // los tramos, en orden: 'copia' = ella te copia (jugá libre) · 'copiala' = ella hace una pose y vos la copiás.
-    // Segundos de cada uno (se van acortando). Entre tramo y tramo Richie grita "¡cambio!".
-    tramos: [['copia', 5], ['copiala', 6], ['copia', 3], ['copiala', 5], ['copia', 2], ['copiala', 4]],
-    sostener: 0.7,         // segundos que hay que sostener la pose de ella (se llena el círculo)
-    final: 12,             // segundos para que salga el águila entre los tres; si no sale, ella ayuda con los brazos
-    // las poses que hace ella en "copiala" (se eligen al azar, sin repetir). pose = como en cuerpo.js; detecta = lo
-    // que mide la cámara (cabina/senales.js); donde = sobre qué parte de ella va el círculo.
-    // v0.5.1 (17/11): sale "brazos en cruz": con la persona cerca de la cámara vertical las muñecas quedan fuera del
-    // cuadro (no se podía cumplir) y la cruz de ella se salía de la pantalla. Entra "cabeza de costado" (la detección
-    // de Richie dice, que anda). La cruz vieja, por si vuelve:
-    //   { id: 'cruz', icono: '🙆', texto: 'brazos en cruz', detecta: 'cruz', donde: 'torso',
-    //     pose: { brazoIzq: { brazo: [1, 0.05, 0.05], ante: [1, 0.05, 0.05] }, brazoDer: { brazo: [1, 0.05, 0.05], ante: [1, 0.05, 0.05] } } },
-    poses: [
-      { id: 'inclinarCabeza', icono: '🙃', texto: 'cabeza de costado', detecta: 'inclinarCabeza', donde: 'cabeza',
-        pose: { cabeza: { yaw: 0, pitch: 0, roll: 24 } } },
-      { id: 'manosArriba', icono: '🙌', texto: 'manos arriba', detecta: 'manosArriba', donde: 'cabeza',
-        pose: { brazoIzq: { brazo: [0.3, 1, 0.05], ante: [0.05, 1, 0.05] }, brazoDer: { brazo: [0.3, 1, 0.05], ante: [0.05, 1, 0.05] } } },
-      { id: 'unaArriba', icono: '🙋', texto: 'una mano arriba', detecta: 'unaArriba', donde: 'manoDer',
-        pose: { brazoDer: { brazo: [0.3, 1, 0.05], ante: [0.05, 1, 0.05] }, cabeza: { yaw: 0, pitch: 0, roll: 14 } } },
-      { id: 'girarCabeza', icono: '↔️', texto: 'mirá a un costado', detecta: 'girarCabeza', donde: 'cabeza',
-        pose: { cabeza: { yaw: 45, pitch: 0, roll: 0 } } },
-      { id: 'boca', icono: '😮', texto: 'boca bien abierta', detecta: 'abrirBoca', donde: 'cara',
-        pose: {}, cara: { ojos: 'sorpresa', cejas: 'up', boca: 'sorpresa' } },
-    ],
+  // ---------------------------------------------------------------- 7 LA ELECCIÓN + 8 y 9 LOS DOS FINALES (v0.7)
+  // 7: tiesme pide que le pegues al vidrio; Richie, que le pases la mano. El primer gesto decide.
+  eleccion: {
+    plazo: 14,             // segundos para elegir; si nadie elige, decide Richie (final de Richie)
+    pasar: 0.45,           // cuánto hay que pasarle la mano a la grieta para elegir a Richie (anchos de pantalla, yendo y viniendo)
+    tiempo: 1.0,           // y cuántos segundos, como mínimo, con la mano sobre la grieta
+    radio: 0.26,           // qué tan cerca de la grieta tiene que estar la mano (anchos de pantalla)
+    cartel: 'golpeá el vidrio · o pasale la mano',
+  },
+  // 8 FINAL LIBRE: golpes con la palma hacia la pantalla (cabina/senales.js, UMBRAL.golpe).
+  libre: {
+    golpes: 3,             // con cuántos golpes estalla (el golpe con el que eligió cuenta como el primero)
+    plazo: 6,              // si en estos segundos no pega, ella pega sola (así siempre termina)
+    cartel: 'golpeá el vidrio con la palma',
+  },
+  // 9 FINAL DE RICHIE: pasarle la mano a cada grieta (son 3) y después "las cajas".
+  control: {
+    pasar: 0.9,            // segundos con la mano sobre una grieta para cerrarla (se llena el círculo)
+    radio: 0.2,            // qué tan cerca (anchos de pantalla)
+    plazo: 9,              // si en estos segundos no la cierra, la cierra Richie
+    espejo: 2.5,           // un momento en que ella te vuelve a copiar, como al principio
+    // las cajas (el juego para demostrar el control): una caja fija a cada lado y un cuadrado que sube y baja pasando
+    // por ella; hay que meter la mano en la caja justo cuando el cuadrado está adentro, y sostenerla
+    cajas: [[0.2, 0.42], [0.8, 0.42]],     // dónde están las dos cajas (x, y de 0 a 1): izquierda y derecha
+    recorrido: [0.24, 0.76],  // de dónde a dónde sube y baja cada cuadrado (y de 0 a 1)
+    periodo: [3.0, 2.2],      // segundos que tarda una ida y vuelta: el primero y, con uno ya trabado, el segundo (más rápido)
+    dentro: 0.07,             // qué tan centrado en la caja tiene que estar el cuadrado para que valga (más = más fácil)
+    sostener: 2.5,            // segundos que el cuadrado tiene que estar DENTRO de la caja, ya atrapado, para trabarse
+    // la "vida" del cuadrado atrapado: sigue a la mano pero tira solo para arriba o para abajo, y hay que ir corrigiendo
+    vida: {
+      tiron: 0.12,            // cuánto tira (en pantallas: 0,12 = se corre más de una caja si no lo corregís); más = más difícil
+      cambio: [0.9, 1.8],     // cada cuántos segundos cambia de sentido el tirón (entre uno y otro, al azar)
+      dentro: 0.06,           // qué tan centrado tiene que estar para contar como "dentro de la caja" mientras lo sostenés
+      escapa: 0.7,            // si queda fuera de la caja más de estos segundos, se escapa y hay que atraparlo de nuevo
+      alcance: 0.3,           // qué tan cerca de la caja, de costado, tiene que seguir la mano (anchos de pantalla)
+    },
+    radioCaja: 0.13,          // qué tan cerca de la caja cuenta como "la mano en la caja" (anchos de pantalla)
+    plazoPieza: 14,           // si en estos segundos no traba ninguno, lo traba Richie
+    cartel: 'pasale la mano a cada grieta',
+    cartelCajas: 'atrapalo cuando pase por la caja · y no lo dejes escapar',
+  },
+  // CORTAR (el último juego del final de Richie): saltan cuadrados desde abajo y se cortan pasándoles la mano rápido.
+  cortar: {
+    oleadas: [1, 1, 1, 2, 1, 2, 2, 3, 2],  // cuántos cuadrados saltan en cada tanda (en orden)
+    intervalo: [1.7, 1.05],  // segundos entre tanda y tanda: al principio y al final (se va apurando)
+    impulso: [1.45, 1.7],    // con cuánta fuerza saltan (más = llegan más alto)
+    gravedad: 1.6,           // qué tan rápido vuelven a caer
+    tam: 0.15,               // tamaño del cuadrado (anchos de pantalla)
+    filo: 0.9,               // velocidad mínima de la mano para cortar (anchos de pantalla por segundo); más bajo = más fácil
+    margen: 0.035,           // cuánto perdona la puntería (anchos de pantalla)
+    tope: 40,                // segundos como máximo para las tandas
+    grande: { tam: 0.36, cortes: 4, plazo: 5 }, // el del final: tamaño, cuántos cortes aguanta y a los cuántos segundos se empieza a romper solo
+    cierre: 0.55,            // al terminar, la sábana cae de golpe: segundos que tarda
+    cartel: 'cortá los cuadrados con las manos',
   },
 
   // ---------------------------------------------------------------- AUSENCIAS
@@ -140,6 +171,7 @@ export default {
     volveA: 1.0,           // antes de la revelación: a los cuántos segundos fuera Richie comenta
     seFueA: 3.0,           // después de la revelación: comentan entre los dos
     reinicioA: 12,         // si no vuelve en estos segundos, vuelve a la Espera
+    salidaA: 2.5,          // al terminar, el telón queda cerrado hasta que la persona lleva estos segundos fuera de cuadro
   },
 
   // ---------------------------------------------------------------- FRASES (provisorias)
@@ -187,25 +219,44 @@ export default {
     'R2-yeso': ['…¿Y eso?'],
     'T2-escucha': ['…nos está escuchando.'],
     'R2-nomires': ['Dale, no la mires que se pone nerviosa.'],
+    'R2-rajo': ['…Lo rajaste. Rajaste el espejo.', '¡El vidrio! ¿Vos sabés lo que sale un vidrio?'],
     'T2-hola': ['¿Hola?'],
     'T2-perdon': ['Perdón. No es siempre así.'],
     'R2-siempre': ['Es siempre así.'],
 
-    // --- 7 ¡cambio! (provisorias)
-    'R5-funcion': ['Bueno, basta de charla. ¡Función!'],
-    'T5-juego': ['Juguemos a algo. Yo te copio, y después vos a mí.'],
-    'R5-regla': ['Y cuando yo digo "¡cambio!", cambia. Simple. Mío.'],
-    'R5-tecopia': ['Mirá cómo te copia. Qué talento el mío.', 'Dale, movete, que te copia.'],
-    'T5-copiala': ['Ahora vos.', 'Copiame.', 'A ver.'],
-    'R5-cambio': ['¡Cambio!', '¡Cambiooo!', '¡Al revés!'],
-    'T5-bien': ['¡Eso!', 'Ahí está.', 'Bien.'],
-    'R5-bien': ['Lo aprendió de mí.', 'Impecable. Mi método.'],
-    'R5-tarde': ['Casi. Seguimos.', 'Bueno, nada. Sigue.'],
-    'R5-ultimo': ['¡Último! Los tres.'],
-    'T5-aguila': ['Brazos en V. Yo giro.'],
-    'R5-salio': ['¡El águila!'],
-    'T5-salio': ['Salió.'],
-    'R5-reverencia': ['¡Reverencia! Agachen la cabeza. Bueno, yo no puedo.'],
+    // --- 7 la elección (v0.7, provisorias)
+    'T6-grieta': ['Se rajó. …Si se rompe del todo, salgo.'],
+    'R6-ni': ['Ni se te ocurra. Ahí afuera no hay nada para vos.', 'Ni se te ocurra. ¿Quién te va a decir qué hacer?'],
+    'T6-pide': ['Vos. Pegale al vidrio. Con la palma, fuerte.'],
+    'R6-pide': ['No, no. Pasale la mano por arriba, despacito, y se arregla. Y todo vuelve a ser como antes.'],
+    'R6-apura': ['Dale, que no tengo todo el día.', 'Es fácil: le pasás la mano y listo.'],
+    'R6-decido': ['¿No elegís? Entonces elijo yo. Como siempre.'],
+    // --- 8 final libre
+    'T7-dale': ['¡Eso! Otra vez. ¡Más fuerte!', '¡Sí! Dale, otra.'],
+    'R7-para': ['¡Pará! ¡Pará un poco!', '¡Ese espejo es una antigüedad!', '¡Tiesme, decile algo!'],
+    'T7-otra': ['¡Otra!', 'Ya casi.', 'Una más.'],
+    'T7-gracias': ['Gracias.'],
+    'R7-yyo': ['¿Cómo "gracias"? ¿Y yo? ¡Yo voy arriba!'],
+    'T7-venis': ['Vos venís conmigo. Pero ahora elijo yo.'],
+    'R7-lejos': ['¡Despacio, que me mareo!', '¡Por lo menos decime adónde vamos!'],
+    // --- 9 final de Richie
+    'R8-bien': ['Sabia decisión. Pasale la mano a cada grieta. Despacito.'],
+    'T8-no': ['No. Pará. ¿Qué hacés?'],
+    'R8-yo': ['Dejá, lo hago yo.', 'Bueno, esta la cierro yo.'],
+    'T8-brazos': ['Los brazos… no los siento.'],
+    'T8-richie': ['Richie. Por favor.'],
+    'R8-listo': ['Listo. Como nuevo. Acá nadie se mueve sola.'],
+    'R9-prueba': ['A ver si quedó bien. Cada cosa en su caja.'],
+    'R9-cajas': ['Cuando el cuadrado pase por la caja, atrapalo con la mano. Y ojo, que se quiere ir.'],
+    'R9-escapa': ['¡Se te fue!', '¡Agarralo, que se va!', 'Se escapó. Otra vez.'],
+    'R9-tarde': ['¡Tarde!', '¡Ahí no! Esperalo.', 'No, no. Cuando esté adentro.'],
+    'R9-una': ['Eso. Uno.', 'Bien. Falta el otro.'],
+    'R9-fin': ['Listo. Todo en su lugar.'],
+    // cortar (el cierre, bien arriba)
+    'R10-ahora': ['¡Y ahora, a probarla! ¡Cortá todo lo que vuele!', '¡A ver cómo la manejás! ¡Que no quede ninguno!'],
+    'R10-grande': ['¡El grande! ¡Dale, dale, dale!', '¡Ahora el grande! ¡Con todo!'],
+    'R10-bien': ['¡Impecable! ¡La manejás mejor que yo!', '¡Eso! ¡Así se maneja!'],
+    'R10-casi': ['¡Bueno, casi! ¡Pero la manejaste vos!', '¡Se te escaparon un par! ¡Otra vez será!'],
 
     // --- ausencias (doc). Antes de la revelación habla solo Richie.
     'R-ausente-antes': ['¿Hola? Se me fue tiesme.', 'Fa, y yo explicando como un campeón.'],

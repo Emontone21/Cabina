@@ -4,8 +4,13 @@
 // _versiones/ (la v0.2.1 tiene botones, críptico, función y selfie; la v0.3, el juego de los hilos).
 // v0.5: el final es la escena 7 "¡Cambio!" (se alternan "te copia" y "copiala", cada vez más rápido; el águila entre
 // los tres); la v0.4 (sin juego final) y la v0.3 (los hilos) están en _versiones/.
+// v0.7 (23/11): el vidrio se raja con el golpe de tiesme (escena 6) y hay DOS FINALES. Escena 7 = la elección (tiesme
+// pide que le pegues al vidrio, Richie que le pases la mano; el primer gesto decide; si nadie elige, decide Richie).
+// Escena 8 = final libre (tus golpes rompen el vidrio y ella se va). Escena 9 = final de Richie (pasarle la mano cierra
+// las grietas, ella vuelve a ser muñeca, y "las cajas": llevás dos cuadrados a sus cajas con la mano). "¡Cambio!" quedó en
+// _versiones/cabina_v0.6.
 //
-// Teclas de quien atiende: 0 reiniciar · 1 a 7 saltar a una escena · → escena siguiente · Espacio pausa · D panel ·
+// Teclas de quien atiende: 0 reiniciar · 1 a 9 saltar a una escena (8 y 9 = los dos finales) · → escena siguiente · Espacio pausa · D panel ·
 // M marcar "acá algo anduvo mal" (queda en el registro de la partida con el segundo).
 // Del tracking siguen andando: F pantalla completa · H panel del tracking · V cámara · C calibrar postura · G gestos ·
 // O girar la imagen (9/11: la cámara va montada en vertical; por defecto 90°, O pasa a 180/270/0 y queda guardado).
@@ -21,13 +26,14 @@ import { crearSombra } from './sombra.js';
 
 export const VERSION_CABINA = guion.version || 'cabina v0.4';
 const CANCELADO = Symbol('cancelado');
-const ORDEN = ['espera', '1', '2', '3', '4', '5', '6', '7', 'fin'];
+const ORDEN = ['espera', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'fin']; // (la 7 decide si sigue la 8 o la 9; las dos van al fin)
 const NOMBRE = {
   espera: 'Espera (telón cerrado)', 1: 'Presentación', 2: 'Calentamiento (Richie dice)', 3: 'Ensayo (estatuas)',
-  4: 'Revelación', 5: 'Discusión', 6: 'Registran que estás', 7: '¡Cambio! (¿quién copia a quién?)', fin: 'Fin',
+  4: 'Revelación', 5: 'Discusión', 6: 'Registran que estás (se raja el vidrio)', 7: 'La elección',
+  8: 'Final libre (romper el vidrio)', 9: 'Final de Richie (reparar y las cajas)', fin: 'Fin',
 };
 const ANTES = new Set(['1', '2', '3']); // antes de la revelación: habla solo Richie
-const ACTIVOS = new Set(['1', '2', '3', '4', '5', '6', '7']);
+const ACTIVOS = new Set(['1', '2', '3', '4', '5', '6', '7', '8', '9']);
 const mezclar = a => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [b[i], b[j]] = [b[j], b[i]]; } return b; };
 const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 
@@ -84,6 +90,8 @@ export function crearDirector(api) {
   function ir(p) {
     audio.callar(); pantalla.limpiar(); cuerpo.limpiar(); audio.zumbar(false); hilos.reset(); soltarCamara(0);
     caraForzada = null; sombra.brillar(0);
+    pantalla.grietas(0); esc.apagar(0, 0); golpeElegido = false; // v0.7: al saltar, el vidrio vuelve a estar sano (las escenas 7 a 9 ponen el suyo)
+    pantalla.marcoAtras(false); esc.frente(null);
     aus.token++; aus.avisado = false; aus.volviendo = false; aus.cortada = null; // corta un comentario de ausencia que estuviera sonando
     correr(p);
   }
@@ -166,6 +174,7 @@ export function crearDirector(api) {
     esc.negro(0, seg); esc.glitch(0);
     esc.oscuro(nombre === 'trabajo' ? 1 : 0, seg);
     esc.ensayo(nombre === 'ensayo' ? 1 : 0, seg);
+    esc.apagar(0, seg);
     audio.zumbar(false);
     audio.ponerMusica(nombre === 'espera' ? 'menu' : nombre === 'trabajo' ? 'oscura' : 'juego');
   }
@@ -222,7 +231,8 @@ export function crearDirector(api) {
     }
     await esperar(cuerpo.posar({ [b]: R[b] }, 0.7));
   }
-  async function golpearVidrio(b, veces = 2) {
+  // (v0.7: alGolpe(i) se llama en el momento de cada golpe: el segundo raja el vidrio)
+  async function golpearVidrio(b, veces = 2, alGolpe = null) {
     // golpea mirando para adelante pero con la cabeza girándose de costado (idea de Agustín, creepy)
     cuerpo.seguir(0);
     cuerpo.posar({ cabeza: { yaw: 22, roll: 16, pitch: -4 } }, 1.6);
@@ -230,6 +240,7 @@ export function crearDirector(api) {
     for (let i = 0; i < veces; i++) {
       await esperar(cuerpo.posar({ [b]: { ante: [-0.15, 0.3, 1] } }, 0.09, 'golpe'));
       audio.fx('toc'); pantalla.temblor(0.12, 9);
+      if (alGolpe) alGolpe(i);
       await esperar(cuerpo.posar({ [b]: { ante: [-0.1, 0.65, 0.75] } }, 0.22));
     }
     await esperar(0.3);
@@ -260,8 +271,15 @@ export function crearDirector(api) {
   }
 
   // ================================================================ datos de la persona
-  const nuevosDatos = () => ({ consignas: [], trampa: null, estatuas: [], copias: [], aguila: null });
+  // v0.7: eleccion = 'libre' | 'richie' | 'richie (no eligió)'; golpes = los que dio al vidrio; reparadas = grietas que cerró
+  const nuevosDatos = () => ({ consignas: [], trampa: null, estatuas: [], eleccion: null, golpes: 0, reparadas: 0, piezas: 0, cortados: null });
   let datos = nuevosDatos();
+  let golpeElegido = false; // el golpe con el que eligió ya cuenta como el primero del final libre
+  let cierreSeg = 1.6;      // segundos que tarda en cerrarse la sábana en el fin (el juego de cortar la hace caer de golpe)
+  const POSTURA = { raiz: R.raiz, torso: R.torso, cabeza: R.cabeza, brazoIzq: R.brazoIzq, brazoDer: R.brazoDer };
+  const mezcla = (a, b, k) => Object.fromEntries(Object.keys(b).map(c => [c, a[c] + (b[c] - a[c]) * k]));
+  // distancia de la mano (el puntero) a un punto de la pantalla, en anchos de pantalla
+  const lejosDe = p => (S.mano.ok ? Math.hypot(S.mano.x - p.x, (S.mano.y - p.y) * 16 / 9) : 9);
 
   // una consigna con el círculo sobre la parte del cuerpo: hay que sostener el gesto (y empezarlo después del cartel)
   async function consigna(c, { trampa = false, i } = {}) {
@@ -321,6 +339,7 @@ export function crearDirector(api) {
       datos = nuevosDatos(); vino = false;
       ponerEscena('espera', 0.8);
       pantalla.limpiar(); pantalla.titulo(true); pantalla.telon(false, 0.01); pantalla.negro(0, 0.8); pantalla.sonidoAviso(!audio.listo());
+      pantalla.grietas(0); golpeElegido = false; pantalla.marcoAtras(false); esc.frente(null);
       pantalla.cartel(guion.cartel); sombra.mostrar(false); soltarCamara(0);
       hilos.reset(); cuerpo.limpiar(); caraForzada = null;
       cuerpo.mostrar(false); todoDeElla(0);
@@ -533,106 +552,394 @@ export function crearDirector(api) {
         if (prog < 1) await esperar(cuerpo.posar(posePollito(1), 1.0));
       }
       caraForzada = { ojos: 'base' };
-      await golpearVidrio('brazoIzq', 2);
+      // v0.7: el vidrio se raja acá, con el segundo golpe de ella y donde pega su mano (antes se rajaba en la discusión)
+      await golpearVidrio('brazoIzq', 2, i => {
+        if (i < 1) return;
+        pantalla.grietas(1, cuerpo.enPantalla('manoIzq') || undefined); audio.fx('vidrio'); pantalla.temblor(0.28, 15);
+        anotar('el vidrio se raja con el golpe de tiesme');
+      });
+      caraForzada = { ojos: 'sorpresa', cejas: 'up' };
+      await esperar(0.8);
+      await hablar('R2-rajo', { pausa: 0.5 });
       await hablar('T2-hola', { pausa: 0.6 });
       caraForzada = { ojos: 'preocupacion' };
       cuerpo.seguir(0.6);
       await charla('T2-perdon', 'R2-siempre');
-      await esperar(cuerpo.posar({ raiz: R.raiz, torso: R.torso, cabeza: R.cabeza, brazoIzq: R.brazoIzq, brazoDer: R.brazoDer }, 1.0));
+      await esperar(cuerpo.posar(POSTURA, 1.0));
     },
 
-    // ---------------- 7 ¡CAMBIO! (v0.5): se alternan "te copia" (ella te copia, jugá libre) y "copiala" (ella hace una
-    // pose y vos la copiás, con el círculo que se llena), cada vez más rápido; termina con el águila entre los tres.
+    // ---------------- 7 LA ELECCIÓN (v0.7): el vidrio quedó rajado. tiesme pide que le pegues (si se rompe, sale);
+    // Richie pide que le pases la mano (se arregla y todo vuelve a ser como antes). No hay menú: el primer gesto decide.
+    // Si nadie elige en guion.eleccion.plazo segundos, decide Richie.
     async 7() {
       pantalla.telon(true, 0.01); cuerpo.mostrar(true); sombra.mostrar(false); pantalla.medidor(null);
-      const c = guion.cambio, f = guion.figura;
-      todoDeElla(0.3); cuerpo.seguir(0.6); caraForzada = { ojos: 'base' };
-      cuerpo.posar({ raiz: R.raiz, torso: R.torso, cabeza: R.cabeza, brazoIzq: R.brazoIzq, brazoDer: R.brazoDer }, 0.6);
-      await hablar('R5-funcion');
-      ponerEscena('funcion', 1.0); audio.fx('inicio');
-      await hablar('T5-juego');
-      await hablar('R5-regla');
-      const poses = mezclar(c.poses);
-      let primera = true;
-      for (const [modo, seg] of c.tramos) {
-        if (modo === 'copia') {
-          // ella te copia (como en el acto 1)
-          copiarTodo(0.4); cuerpo.seguir(0);
-          pantalla.indicador({ encabezado: 'TE COPIA', icono: '🪞', texto: 'movete como quieras' });
-          if (primera) { decir('R5-tecopia'); primera = false; }
-          await esperar(seg);
-        } else {
-          // ella hace una pose y vos la copiás: el círculo sobre su cuerpo se llena mientras sostenés la pose
-          const p = poses.shift() || c.poses[0];
-          todoDeElla(0.3); cuerpo.seguir(0);
-          caraForzada = p.cara || { ojos: 'base' };
-          cuerpo.posar({ torso: R.torso, cabeza: R.cabeza, brazoIzq: R.brazoIzq, brazoDer: R.brazoDer, ...p.pose }, 0.5, 'sale');
-          pantalla.indicador({ encabezado: 'COPIALA', icono: p.icono, texto: p.texto });
-          decir('T5-copiala');
-          let acc = 0, tHecho = null;
-          const ok = await hasta(() => {
-            const si = sen.ahora(p.detecta);
-            acc = si ? acc + dtUlt : Math.max(0, acc - dtUlt * 1.5);
-            const q = cuerpo.enPantalla(p.donde || 'cabeza');
-            if (q) pantalla.anillo({ x: q.x, y: clamp(q.y - (p.donde === 'cabeza' ? 0.1 : 0)), icono: p.icono, k: acc / c.sostener });
-            if (acc >= c.sostener && tHecho === null) tHecho = reloj;
-            return tHecho !== null;
-          }, seg);
-          datos.copias.push({ id: p.id, ok, t: ok ? +(reloj - pasoT0).toFixed(1) : null });
-          anotar(`copiala ${p.id}: ${ok ? '✔' : '✘'}`);
-          if (ok) {
-            const q = cuerpo.enPantalla(p.donde || 'cabeza');
-            if (q) pantalla.anillo({ x: q.x, y: clamp(q.y - (p.donde === 'cabeza' ? 0.1 : 0)), icono: p.icono, k: 1 });
-            audio.fx('bien'); pantalla.marca('✔');
-            caraForzada = { ojos: 'feliz' }; cuerpo.posar({ cabeza: { pitch: 10, yaw: 0, roll: 0 } }, 0.25, 'sale'); // asiente
-            await hablar(Math.random() < 0.6 ? 'T5-bien' : 'R5-bien', { pausa: 0.1 });
-          } else { audio.fx('mal', { vol: 0.5 }); pantalla.marca('✘'); await hablar('R5-tarde', { pausa: 0.1 }); }
-          pantalla.anillo(null);
-        }
-        // ¡cambio!
-        audio.fx('estatua', { vol: 0.7 }); pantalla.temblor(0.1, 6); pantalla.indicador(null);
-        decir('R5-cambio');
-        await esperar(0.5);
-      }
-      // final: el águila entre los tres (tus brazos, su giro)
-      await hablar('R5-ultimo', { pausa: 0.2 });
-      ponerEscena('ensayo', 0.8); audio.cortarMusica();
-      sombra.hornear(f); sombra.mostrar(true); sombra.brillar(0);
-      todoDeElla(0.3); caraForzada = { ojos: 'base' };
-      await hablar('T5-aguila', { pausa: 0.2 });
-      cuerpo.dial(['brazoIzq', 'brazoDer', 'manoIzq', 'manoDer'], LIMPIO, 0.5);
-      cuerpo.dial(['cabeza', 'torso', 'cara'], { propio: 1 }, 0.5);
-      cuerpo.posar({ raiz: { giro: f.giro }, torso: R.torso, cabeza: R.cabeza }, 1.2);
-      pantalla.indicador({ encabezado: 'los tres', icono: '🦅', texto: f.instruccion });
-      audio.seguirMusica();
-      let r = await intentoFigura(c.final, { hastaSalir: true });
-      if (!r.salio) { // le damos una mano: los brazos van solos a la figura
-        anotar('águila: no salía, ella ayuda con los brazos');
-        cuerpo.dial(['brazoIzq', 'brazoDer'], { propio: 1 }, 1.0); cuerpo.posar(f.pose, 1.0);
-        r = await intentoFigura(4, { hastaSalir: true });
-      }
-      datos.aguila = { solos: r.salio && !datos.aguila, mejor: +r.mejor.toFixed(2) };
-      anotar(`águila: encaje máximo ${Math.round(r.mejor * 100)}%`);
-      audio.cortarMusica(); pantalla.indicador(null);
-      sombra.brillar(1); audio.fx('aplausos'); pantalla.medidor(1, '¡salió!');
-      caraForzada = { ojos: 'feliz', boca: 'feliz' };
-      await charla('R5-salio', 'T5-salio');
-      // reverencia
-      todoDeElla(0.4);
-      await hablar('R5-reverencia', { esperarFin: false });
-      await esperar(cuerpo.posar({ raiz: { giro: 0 }, torso: { pitch: 38, yaw: 0, roll: 0 }, cabeza: { pitch: 18, yaw: 0, roll: 0 }, brazoIzq: R.brazoIzq, brazoDer: R.brazoDer }, 1.0));
-      audio.fx('aplausos');
-      await esperar(1.4);
-      await esperar(cuerpo.posar({ torso: R.torso, cabeza: R.cabeza }, 0.9));
-      pantalla.medidor(null);
+      if (escena !== 'trabajo') ponerEscena('trabajo', 0.6);
+      if (pantalla.vidrio() !== 1) pantalla.grietas(1);
+      const e = guion.eleccion;
+      todoDeElla(0.3); cuerpo.seguir(0.6); caraForzada = { ojos: 'preocupacion' };
+      cuerpo.posar(POSTURA, 0.6);
+      await hablar('T6-grieta');
+      await hablar('R6-ni');
+      caraForzada = { ojos: 'base' };
+      await hablar('T6-pide');
+      await hablar('R6-pide');
+      pantalla.indicador({ encabezado: 'vos elegís', icono: '⚖', texto: e.cartel });
+      const g0 = S.golpe.n, t0 = reloj, pts = pantalla.puntosGrieta();
+      let roce = 0, sobre = 0, xAntes = null, aviso = false, elige = null;
+      await hasta(() => {
+        pantalla.puntero(S.mano.x, S.mano.y, S.mano.ok);
+        if (S.golpe.n > g0) { elige = 'libre'; return true; }
+        // pasarle la mano: la mano cerca de la grieta un rato (e.tiempo), yendo y viniendo de costado (se suma lo que
+        // recorre; un salto grande de un cuadro al otro es el puntero cambiando de mano, no cuenta)
+        const cerca = pts.some(p => lejosDe(p) < e.radio);
+        const dx = cerca && xAntes !== null ? Math.abs(S.mano.x - xAntes) : 0;
+        if (dx < 0.06) roce += dx;
+        sobre = cerca ? sobre + dtUlt : Math.max(0, sobre - dtUlt * 0.5);
+        xAntes = cerca ? S.mano.x : null;
+        if (S.golpe.salto > UMBRAL.golpe.salto * 0.6) { roce = 0; sobre = 0; } // está por pegar: eso no es pasar la mano
+        if (roce >= e.pasar && sobre >= e.tiempo) { elige = 'richie'; return true; }
+        if (!aviso && reloj - t0 > e.plazo * 0.55) { aviso = true; decir('R6-apura'); }
+        return false;
+      }, e.plazo);
+      pantalla.indicador(null); pantalla.puntero(0, 0, false);
+      golpeElegido = elige === 'libre';
+      datos.eleccion = elige || 'richie (no eligió)';
+      anotar(`ELECCIÓN: ${datos.eleccion}`);
+      if (!elige) await hablar('R6-decido');
+      return elige === 'libre' ? '8' : '9';
     },
 
-    // ---------------- FIN: se cierra el telón; cuando la persona se va, vuelve la Espera
+    // ---------------- 8 FINAL LIBRE (v0.7): cada golpe tuyo (la palma hacia la pantalla) raja más el vidrio; ella pega
+    // del otro lado a la vez. Al tercero estalla: ella da las gracias, sale del espejo y se lleva a Richie puesto.
+    async 8() {
+      pantalla.telon(true, 0.01); cuerpo.mostrar(true); sombra.mostrar(false); pantalla.medidor(null);
+      if (escena !== 'trabajo') ponerEscena('trabajo', 0.6);
+      if (pantalla.vidrio() < 1 || pantalla.vidrio() > 3) pantalla.grietas(1);
+      const L = guion.libre;
+      todoDeElla(0.3); cuerpo.seguir(0.6); caraForzada = { ojos: 'feliz' };
+      const LISTA = { brazo: [0.12, 0.05, 1], ante: [-0.1, 0.6, 0.8] }; // la mano de ella lista contra el vidrio
+      cuerpo.posar({ raiz: { x: 0, y: -0.03, z: 0.22, giro: 0 }, torso: { pitch: 10, yaw: 0, roll: 0 }, cabeza: R.cabeza, brazoDer: R.brazoDer, brazoIzq: LISTA }, 0.6, 'anticipa');
+      let nivel = pantalla.vidrio();
+      const rajar = async quien => {
+        nivel++; datos.golpes += quien === 'persona' ? 1 : 0;
+        cuerpo.posar({ brazoIzq: { ante: [-0.15, 0.3, 1] } }, 0.08, 'golpe');
+        if (nivel > L.golpes) {
+          pantalla.estallar(); audio.fx('estalla'); pantalla.temblor(0.55, 24);
+          // desde acá el marco se pinta en el fondo (detrás de ella), para que después pueda cruzarlo y salir del espejo.
+          // Se cambia justo en el destello, que tapa el salto.
+          esc.frente(pantalla.marcoAtras(true));
+        }
+        else { pantalla.grietas(Math.min(3, nivel)); audio.fx('vidrio'); pantalla.temblor(0.28, 15); }
+        anotar(`golpe al vidrio (${quien}): ${nivel > L.golpes ? 'ESTALLA' : 'nivel ' + nivel}`);
+        await esperar(0.2);
+        if (nivel <= L.golpes) cuerpo.posar({ brazoIzq: LISTA }, 0.25);
+      };
+      if (golpeElegido) { golpeElegido = false; await rajar('persona'); }
+      await hablar('T7-dale', { pausa: 0.1 });
+      pantalla.indicador({ encabezado: 'tiesme pide', icono: '✋', texto: L.cartel });
+      let n = 0;
+      while (nivel <= L.golpes) {
+        const g0 = S.golpe.n;
+        const pego = await hasta(() => S.golpe.n > g0, L.plazo);
+        await rajar(pego ? 'persona' : 'ella sola');
+        if (nivel <= L.golpes) { decir(n++ % 2 ? 'T7-otra' : 'R7-para'); await esperar(0.7); }
+      }
+      // estalló: vuelve la luz tibia (la lamparita), ella respira
+      pantalla.indicador(null);
+      ponerEscena('funcion', 1.8);
+      caraForzada = { ojos: 'sorpresa', cejas: 'up' };
+      // (da un paso atrás por el estallido: queda entera dentro del marco, que ahora está detrás de ella)
+      await esperar(cuerpo.posar({ raiz: { x: 0, y: 0, z: -0.14, giro: 0 }, torso: R.torso, cabeza: R.cabeza, brazoIzq: R.brazoIzq, brazoDer: R.brazoDer }, 1.1));
+      await esperar(0.7);
+      caraForzada = { ojos: 'feliz', boca: 'feliz' };
+      await hablar('T7-gracias', { pausa: 0.7 });
+      await hablar('R7-yyo');
+      await hablar('T7-venis', { pausa: 0.4 });
+      // SALE DEL PROPIO ESPEJO (pedido de Agustín, 23/11: "que salga del propio espejo y escape, en vez de irse por
+      // detrás"): se acerca al marco y apoya las manos en los bordes, lo cruza hacia vos (queda por delante del marco y
+      // cada vez más grande) y se va pasando al lado de la cámara, por el lado de la puerta. Provisorio, por programa.
+      cuerpo.seguir(0);
+      const BORDE = { brazo: [0.8, 0.2, 0.6], ante: [0.6, 0.5, 0.7] }; // las manos en los bordes del marco
+      await esperar(cuerpo.posar({ raiz: { z: 0.2, y: -0.04 }, torso: { pitch: 10, yaw: 0, roll: 0 }, brazoIzq: BORDE, brazoDer: BORDE }, 1.0, 'suave'));
+      audio.fx('hilo', { vol: 0.5 });
+      await esperar(cuerpo.posar({ raiz: { z: 0.36, y: -0.09 }, torso: { pitch: 15, yaw: 0, roll: 0 } }, 0.7, 'anticipa'));
+      await esperar(cuerpo.posar({ raiz: { z: 0.52, y: -0.2 }, torso: { pitch: 18, yaw: 0, roll: 0 }, cabeza: { pitch: -14, yaw: 0, roll: 0 }, brazoIzq: R.brazoIzq, brazoDer: R.brazoDer }, 0.9, 'suave'));
+      await esperar(0.35); // ya está de este lado: te mira un momento, muy cerca
+      cuerpo.posar({ cabeza: { pitch: -8, yaw: -lado * 14, roll: 0 }, torso: { pitch: 10, yaw: 0, roll: lado * 6 } }, 0.6);
+      await esperar(cuerpo.posar({ raiz: { x: lado * 0.4, y: -0.3, z: 0.66, giro: lado * 16 } }, 0.7, 'suave'));
+      await esperar(cuerpo.posar({ raiz: { x: lado * 1.7, y: -0.35, z: 0.8, giro: lado * 40 } }, 0.8, 'golpe'));
+      cuerpo.mostrar(false);
+      await esperar(1.0);
+      await hablar('R7-lejos', { pausa: 1.0 }); // (ya no se los ve: el espejo quedó vacío)
+      return 'fin';
+    },
+
+    // ---------------- 9 FINAL DE RICHIE (v0.7): pasarle la mano a cada grieta la cierra (en dorado) y a ella le saca algo:
+    // primero los brazos, después el cuerpo, al final la cara. Vuelve a ser muñeca. Para demostrarlo, "las cajas": trabar
+    // dos cuadrados que suben y bajan, metiendo la mano en su caja en el momento justo (más abajo). Antes (hasta el 23/11) era "el interruptor".
+    async 9() {
+      pantalla.telon(true, 0.01); cuerpo.mostrar(true); sombra.mostrar(false); pantalla.medidor(null);
+      if (escena !== 'trabajo') ponerEscena('trabajo', 0.6);
+      if (pantalla.vidrio() !== 1) pantalla.grietas(1);
+      const C = guion.control;
+      todoDeElla(0.3); cuerpo.seguir(0.6); caraForzada = { ojos: 'preocupacion' };
+      cuerpo.posar(POSTURA, 0.6);
+      await hablar('R8-bien');
+      await hablar('T8-no', { pausa: 0.1 });
+      pantalla.indicador({ encabezado: 'Richie dice', icono: '🤚', texto: C.cartel });
+      const PIERDE = [['brazoIzq', 'brazoDer', 'manoIzq', 'manoDer'], ['torso', 'cabeza'], ['cara']];
+      for (let n = 0; n < PIERDE.length; n++) {
+        let acc = 0, cual = null;
+        const sola = !(await hasta(() => {
+          pantalla.puntero(S.mano.x, S.mano.y, S.mano.ok);
+          // la grieta abierta más cercana a la mano
+          const libres = pantalla.puntosGrieta().filter(p => !p.reparada);
+          let mej = libres[0], dm = lejosDe(mej);
+          for (const p of libres) { const d = lejosDe(p); if (d < dm) { dm = d; mej = p; } }
+          if (cual?.i !== mej.i) { cual = mej; acc = 0; }
+          acc = dm < C.radio ? acc + dtUlt : Math.max(0, acc - dtUlt * 0.6);
+          pantalla.anillo({ x: mej.x, y: mej.y, icono: '🤚', k: acc / C.pasar });
+          return acc >= C.pasar;
+        }, C.plazo));
+        cual = cual || pantalla.puntosGrieta().find(p => !p.reparada);
+        if (sola) { anotar('no la repara: la cierra Richie'); decir('R8-yo'); }
+        else datos.reparadas++;
+        pantalla.anillo({ x: cual.x, y: cual.y, icono: '🤚', k: 1 });
+        pantalla.reparar(cual.i); audio.fx('sella');
+        cuerpo.dial(PIERDE[n], LIMPIO, 0.9);
+        if (n === 1) cuerpo.seguir(0);
+        if (n === 2) caraForzada = null;
+        anotar(`grieta ${n + 1} cerrada: tiesme pierde ${PIERDE[n].join(', ')}`);
+        await esperar(0.6);
+        pantalla.anillo(null);
+        if (!sola || n === 2) await hablar(['T8-brazos', 'T8-richie', 'R8-listo'][n]); else await esperar(1.2);
+      }
+      pantalla.indicador(null); pantalla.puntero(0, 0, false);
+      pantalla.grietas(0);
+      copiarTodo(0.6);
+      ponerEscena('funcion', 1.4);
+      await esperar(C.espejo); // un momento: otra vez te copia, como al principio
+
+      // LAS CAJAS (pedido de Agustín, 23/11; reemplazó al interruptor). Segunda versión, del mismo día: "los cuadrados
+      // van subiendo y bajando y el usuario tiene que poner la mano justo cuando está dentro del cuadrado y mantenerla
+      // 2-3 segundos, algo así como el minijuego de penales de Bully" (un juego de acertar el momento; la primera versión
+      // era llevar cada cuadrado a su caja con la mano). Hay una caja fija a cada lado de ella y, por cada una, un
+      // cuadrado que sube y baja pasando por la caja. Cuando el cuadrado está dentro de la caja (la caja se ilumina),
+      // hay que METER la mano en la caja: si es justo, el cuadrado queda agarrado y hay que sostener la mano
+      // C.sostener segundos (la caja se va llenando) para trabarlo. Si la mano entra a destiempo, la caja marca el error
+      // y hay que sacarla y volver a probar; si se saca antes de tiempo, el cuadrado se suelta. Cada cuadrado trabado le
+      // traba a ella el brazo de ese lado y la endereza. Si pasa C.plazoPieza sin trabar ninguno, lo traba Richie.
+      await hablar('R9-prueba');
+      todoDeElla(0.4); caraForzada = { ojos: 'base' }; cuerpo.seguir(0); cuerpo.vida(0);
+      const FLOJA = { raiz: R.raiz, torso: { pitch: 12, yaw: 0, roll: 0 }, cabeza: { pitch: 22, yaw: 0, roll: 9 }, brazoIzq: R.brazoIzq, brazoDer: R.brazoDer };
+      const RIGIDO = { brazo: [0.42, -0.9, 0.02], ante: [0.42, -0.9, 0.02] }; // el brazo derecho y apenas separado, de muñeca
+      const BRAZO_DE = ['brazoDer', 'brazoIzq']; // la caja de la izquierda de la pantalla le traba su brazo derecho (el que se ve de ese lado)
+      await esperar(cuerpo.posar(FLOJA, 0.8));
+      const [r0, r1] = C.recorrido;
+      const J = {
+        riel: C.recorrido,
+        cajas: C.cajas.map(([x, y]) => ({ x, y, k: 0, llena: false, dentro: false, falla: 0 })),
+        // u = por dónde va de su ida y vuelta (0 arriba, 0,5 abajo, 1 arriba otra vez); arrancan desfasados
+        piezas: C.cajas.map(([x], i) => ({ x, y: r0, u: i * 0.37, k: 0, agarrada: false, encajada: false })),
+      };
+      let puestas = 0, tC = 0, tAviso = -9, tPlazo = 0;
+      const manoEn = [false, false], sost = [0, 0], fuera = [0, 0], afuera = [0, 0]; // fuera = segundos sin la mano; afuera = segundos con el cuadrado fuera de la caja
+      const trabar = (i, quien) => {
+        const c = J.cajas[i], p = J.piezas[i];
+        Object.assign(p, { x: c.x, y: c.y, k: 0, agarrada: false, encajada: true }); Object.assign(c, { llena: true, dentro: false, k: 0 }); puestas++; tPlazo = 0;
+        if (quien === 'persona') datos.piezas++;
+        audio.fx('click'); audio.fx('toc', { vol: 0.5 }); pantalla.temblor(0.12, 6);
+        const lado2 = i === 0 ? -1 : 1, todo = puestas >= J.piezas.length;
+        cuerpo.posar({ [BRAZO_DE[i]]: RIGIDO, torso: todo ? R.torso : { pitch: 6, yaw: 0, roll: lado2 * 4 }, cabeza: todo ? R.cabeza : { pitch: 11, yaw: 0, roll: lado2 * 6 } }, 0.28, 'sale');
+        anotar(`cuadrado trabado en la caja ${i === 0 ? 'izquierda' : 'derecha'} (${quien}): se le traba ${BRAZO_DE[i]}`);
+        if (!todo) decir('R9-una');
+      };
+      pantalla.cajas(J);
+      pantalla.indicador({ encabezado: 'Richie dice', icono: '▢', texto: C.cartelCajas });
+      decir('R9-cajas');
+      await hasta(() => {
+        tC += dtUlt; tPlazo += dtUlt;
+        pantalla.puntero(S.mano.x, S.mano.y, S.mano.ok);
+        const per = C.periodo[Math.min(puestas, C.periodo.length - 1)]; // con uno trabado, el otro va más rápido
+        J.piezas.forEach((p, i) => {
+          const c = J.cajas[i];
+          if (p.encajada) return;
+          const en = lejosDe(c) < C.radioCaja;
+          c.falla = Math.max(0, c.falla - dtUlt);
+          if (!p.agarrada) {
+            p.u = (p.u + dtUlt / per) % 1;
+            p.y = r0 + (r1 - r0) * (p.u < 0.5 ? p.u * 2 : 2 - p.u * 2);
+            c.dentro = Math.abs(p.y - c.y) < C.dentro;
+            if (en && !manoEn[i]) { // la mano acaba de entrar a la caja: ¿justo?
+              if (c.dentro) { Object.assign(p, { agarrada: true, f: 0, tira: Math.random() < 0.5 ? -1 : 1, tGiro: 0.5 }); sost[i] = 0; fuera[i] = 0; afuera[i] = 0; audio.fx('tic'); }
+              else { c.falla = 0.4; audio.fx('mal', { vol: 0.4 }); if (tC - tAviso > 3.5) { tAviso = tC; decir('R9-tarde'); } }
+            }
+          } else {
+            // agarrado, pero con "vida" propia (pedido de Agustín, 23/11: "por más que uno lo esté poniendo bien, los
+            // cuadrados deben seguir queriendo ir para arriba o abajo, y con la mano tengo que seguir moviéndolos dentro
+            // del cuadrado grande para que no se escapen"). El cuadrado sigue a la mano (de arriba abajo) MÁS un tirón
+            // propio, para arriba o para abajo, que cada tanto cambia de sentido: hay que ir corrigiendo con la mano.
+            // La caja se llena solo mientras el cuadrado está adentro; afuera se va vaciando, y si queda afuera más de
+            // V.escapa segundos (o se pierde la mano) se escapa: vuelve a subir y bajar y hay que atraparlo otra vez.
+            const V = C.vida, m = S.mano, conMano = m.ok && Math.abs(m.x - c.x) < V.alcance;
+            fuera[i] = conMano ? 0 : fuera[i] + dtUlt;
+            if ((p.tGiro -= dtUlt) <= 0) { p.tira = (p.tira > 0 ? -1 : 1) * (0.75 + Math.random() * 0.5); p.tGiro = V.cambio[0] + Math.random() * (V.cambio[1] - V.cambio[0]); }
+            p.f += (p.tira - p.f) * Math.min(1, dtUlt * 5); // el tirón cambia de a poco, no de golpe
+            const quiere = (conMano ? m.y : p.y) + p.f * V.tiron;
+            p.y = clamp(p.y + (quiere - p.y) * Math.min(1, dtUlt * 8), r0, r1);
+            p.x = c.x + 0.006 * Math.sin(tC * 43 + i); // tiembla: está vivo
+            const adentro = Math.abs(p.y - c.y) < V.dentro;
+            c.dentro = adentro;
+            if (adentro) { sost[i] += dtUlt; afuera[i] = 0; } else { afuera[i] += dtUlt; sost[i] = Math.max(0, sost[i] - dtUlt * 0.6); }
+            c.k = clamp(sost[i] / C.sostener);
+            if (sost[i] >= C.sostener) trabar(i, 'persona');
+            else if (afuera[i] > V.escapa || fuera[i] > 0.5) { // se escapó
+              p.agarrada = false; sost[i] = 0; p.x = c.x; p.u = clamp((p.y - r0) / (r1 - r0)) / 2;
+              audio.fx('mal', { vol: 0.35 }); c.falla = 0.4; anotar('se le escapó el cuadrado');
+              if (tC - tAviso > 3) { tAviso = tC; decir('R9-escapa'); }
+            }
+          }
+          if (!p.agarrada && !p.encajada) c.k = 0;
+          manoEn[i] = en;
+        });
+        if (tPlazo > C.plazoPieza) { // no traba ninguno: lo traba Richie
+          const i = J.piezas.findIndex(p => !p.encajada);
+          anotar('no traba el cuadrado: lo traba Richie'); decir('R8-yo');
+          trabar(i, 'richie');
+        }
+        pantalla.cajas(J);
+        return puestas >= J.piezas.length;
+      });
+      pantalla.puntero(0, 0, false); pantalla.indicador(null);
+      await esperar(0.7);
+      await hablar('R9-fin', { pausa: 0.4 });
+
+      // CORTAR (pedido por Agustín el 23/11: "mejor que sea un juego tipo Fruit Ninja"; un rato antes había elegido
+      // "esquivar", que se sacó). Es un juego del género de cortar lo que vuela, hecho con lo de acá: desde abajo saltan
+      // cuadrados dorados, dentro del espejo, y se cortan pasándoles la mano rápido. El filo son LAS MANOS DE ELLA en la
+      // pantalla (te copia, así que son las tuyas): cada mano deja una estela cuando va rápido. Salen por tandas, cada
+      // vez más juntas y de a más; el que se cae sin cortar no resta nada. Al final sube uno grande, que hay que cortar
+      // varias veces; cuando revienta es el festejo y la sábana cae de golpe. Agustín quiere que este cierre sea
+      // divertido y "termine bien arriba, así se quedan con ganas".
+      pantalla.cajas(null);
+      const E = guion.cortar;
+      copiarTodo(0.5); cuerpo.vida(1); cuerpo.seguir(0);
+      cuerpo.posar({ torso: R.torso, cabeza: R.cabeza, brazoIzq: R.brazoIzq, brazoDer: R.brazoDer }, 0.5);
+      audio.ponerMusica('arriba');
+      await hablar('R10-ahora', { pausa: 0.1 });
+      pantalla.indicador({ encabezado: 'Richie dice', icono: '⟋', texto: E.cartel });
+      // forzar = { manos: [{ x, y }, { x, y }] }: para probar sin persona (lo usa el guion de las grabaciones); normalmente null
+      const Z = { lista: [], cortados: 0, perdidos: 0, total: E.oleadas.reduce((a, b) => a + b, 0), forzar: null };
+      window.__cabina.cortar = Z;
+      const MANOS = ['manoIzq', 'manoDer'], filo = MANOS.map(() => ({ p: null, vel: 0, rastro: [] }));
+      let tJ = 0;
+      // las manos: dónde están y si van lo bastante rápido para cortar. Devuelve los tramos que cortan en este cuadro.
+      const manos = () => {
+        const cortes = [];
+        MANOS.forEach((m, i) => {
+          const f = filo[i], p = Z.forzar ? Z.forzar.manos[i] : cuerpo.enPantalla(m);
+          if (!p) { f.p = null; f.vel = 0; f.rastro.length = 0; return; }
+          if (!(dtUlt > 0)) return;
+          if (f.p) {
+            const d = Math.hypot(p.x - f.p.x, (p.y - f.p.y) * 16 / 9);
+            f.vel = d / dtUlt;
+            if (f.vel > E.filo && d < 0.5) cortes.push([f.p, { x: p.x, y: p.y }]);
+          }
+          f.p = { x: p.x, y: p.y };
+          f.rastro.push({ x: p.x, y: p.y, t: tJ, v: f.vel });
+          while (f.rastro.length && tJ - f.rastro[0].t > 0.2) f.rastro.shift();
+        });
+        return cortes;
+      };
+      // ¿el tramo a→b pasa por el cuadrado o? (distancia del centro al tramo, en anchos de pantalla)
+      const pasaPor = (o, a, b) => {
+        const ax = a.x, ay = a.y * 16 / 9, dx = b.x - ax, dy = b.y * 16 / 9 - ay, px = o.x - ax, py = o.y * 16 / 9 - ay;
+        const k = clamp((px * dx + py * dy) / (dx * dx + dy * dy || 1));
+        return Math.hypot(px - dx * k, py - dy * k) < o.tam / 2 + E.margen;
+      };
+      // dos mitades que se separan del corte y caen
+      const partir = (o, a, b, tam = o.tam) => {
+        const ang = Math.atan2((b.y - a.y) * 16 / 9, b.x - a.x), nx = -Math.sin(ang), ny = Math.cos(ang);
+        for (const s of [-1, 1]) Z.lista.push({ tipo: 'mitad', estado: 'mitad', x: o.x + nx * s * tam * 0.24, y: o.y + ny * s * tam * 0.24 * 9 / 16, vx: (o.vx || 0) + nx * s * 0.5,
+          vy: (o.vy || 0) * 0.4 + ny * s * 0.28 - 0.2, tam, rot: ang * 180 / Math.PI, vr: s * 220, t: 0.85, op: 1 });
+        audio.fx('corte'); Z.cortados++;
+      };
+      const lanzar = () => {
+        const x = 0.2 + Math.random() * 0.6;
+        Z.lista.push({ tipo: 'entero', estado: '', x, y: 1.08, vx: (0.5 - x) * (0.25 + Math.random() * 0.35), vy: -(E.impulso[0] + Math.random() * (E.impulso[1] - E.impulso[0])),
+          tam: E.tam, rot: Math.random() * 360, vr: (Math.random() * 2 - 1) * 260, op: 1 });
+      };
+      // un cuadro del juego: todo se mueve, se corta lo que crucen las manos y se dibuja
+      const cuadroJuego = () => {
+        tJ += dtUlt;
+        const cortes = manos();
+        for (const o of [...Z.lista]) {
+          if (o.tipo === 'grande') continue;
+          o.vy += E.gravedad * dtUlt; o.x += o.vx * dtUlt; o.y += o.vy * dtUlt; o.rot += o.vr * dtUlt;
+          if (o.tipo === 'mitad') { o.t -= dtUlt; o.op = clamp(o.t / 0.35); if (o.t <= 0) o.fuera = true; continue; }
+          const c = cortes.find(([a, b]) => pasaPor(o, a, b));
+          if (c) { partir(o, c[0], c[1]); o.fuera = true; } else if (o.y > 1.12 && o.vy > 0) { o.fuera = true; Z.perdidos++; }
+        }
+        Z.lista = Z.lista.filter(o => !o.fuera);
+        return cortes;
+      };
+      const dibujar = () => {
+        pantalla.volando(Z.lista); pantalla.estela(filo.map(f => f.rastro));
+        pantalla.medidor(clamp(Z.cortados / (Z.total + E.grande.cortes)), `cortaste ${Z.cortados}`);
+      };
+      // las tandas
+      let tanda = 0, prox = 0.7;
+      await hasta(() => {
+        cuadroJuego();
+        if (tanda < E.oleadas.length && tJ >= prox) {
+          for (let k = 0; k < E.oleadas[tanda]; k++) lanzar();
+          audio.fx('tic', { vol: 0.7 }); tanda++;
+          prox = tJ + E.intervalo[0] + (E.intervalo[1] - E.intervalo[0]) * tanda / E.oleadas.length;
+        }
+        dibujar();
+        return tanda >= E.oleadas.length && !Z.lista.some(o => o.tipo === 'entero');
+      }, E.tope);
+      // el grande: sube al medio y hay que cortarlo varias veces (si nadie lo corta, se va rompiendo solo)
+      decir('R10-grande');
+      const g = { tipo: 'grande', estado: 'grande', x: 0.5, y: 1.25, tam: E.grande.tam, rot: 0, vr: 28, vida: E.grande.cortes, golpe: 0, op: 1 };
+      Z.lista.push(g);
+      let tG = 0, ultimo = 0;
+      await hasta(() => {
+        const cortes = cuadroJuego();
+        tG += dtUlt;
+        g.y += (0.4 + 0.015 * Math.sin(tG * 3) - g.y) * Math.min(1, dtUlt * 3.2); g.rot += g.vr * dtUlt; g.golpe = Math.max(0, g.golpe - dtUlt * 4);
+        let c = tG - ultimo > 0.22 ? cortes.find(([a, b]) => pasaPor(g, a, b)) : null;
+        if (!c && tG > E.grande.plazo && tG - ultimo > 1.1) c = [{ x: g.x - 0.2, y: g.y - 0.08 }, { x: g.x + 0.2, y: g.y + 0.08 }]; // nadie lo corta: se rompe solo
+        if (c) {
+          ultimo = tG; g.vida--; g.golpe = 1; g.vr = -g.vr * 1.25; g.tam *= 0.93; pantalla.temblor(0.1, 7);
+          partir({ x: g.x, y: g.y, vx: 0, vy: -0.3 }, c[0], c[1], E.tam * 0.8);
+        }
+        dibujar();
+        return g.vida <= 0;
+      }, E.grande.plazo + E.grande.cortes * 1.4 + 3);
+      datos.cortados = Z.cortados;
+      anotar(`cortar: ${Z.cortados} cortes (${Z.perdidos} se cayeron sin cortar)`);
+      // el cierre, bien arriba: el grande revienta, festejo, y la sábana cae de golpe encima
+      pantalla.volando([]); pantalla.estela(null); pantalla.indicador(null);
+      pantalla.medidor(1, `¡cortaste ${Z.cortados}!`);
+      pantalla.festejo(); audio.fx('estalla', { vol: 0.5 }); audio.fx('festejo'); audio.fx('aplausos', { vol: 0.8 }); pantalla.temblor(0.25, 9);
+      await hablar(Z.cortados >= (Z.total + E.grande.cortes) * 0.6 ? 'R10-bien' : 'R10-casi', { pausa: 0.15 });
+      cierreSeg = E.cierre;
+      return 'fin';
+    },
+
+    // ---------------- FIN: se cierra el telón y ahí termina. Recién cuando la persona se va vuelve la Espera.
+    // v0.7 (23/11, Agustín: "se debe cerrar el telón y ahí termina, no debe volver tiesme"): antes esperaba 10 s y, si
+    // la persona seguía parada, volvía a la Espera, que arrancaba otra partida enseguida (se abría el telón y volvía
+    // tiesme). Ahora queda cerrado todo el tiempo que la persona siga ahí. Para empezar de nuevo con la misma persona:
+    // tecla 1.
     async fin() {
-      pantalla.limpiar(); audio.fx('telon'); pantalla.telon(false, 1.6); audio.pararMusica(1.5);
-      await esperar(1.8);
+      // (cierreSeg: lo que tarda en cerrarse la sábana; el juego de cortar la hace caer de golpe)
+      const seg = cierreSeg; cierreSeg = 1.6;
+      pantalla.limpiar(); audio.fx('telon'); pantalla.telon(false, seg); audio.pararMusica(Math.max(1.5, seg + 1.2));
+      await esperar(seg + 0.3);
       cuerpo.mostrar(false); sombra.mostrar(false);
-      await hasta(() => ausente > 2.5, 10);
+      await hasta(() => ausente > (guion.casos.salidaA ?? 2.5));
       return 'espera';
     },
   };
@@ -727,7 +1034,7 @@ export function crearDirector(api) {
       d: () => pantalla.panel(),
       m: () => marcar(),
     };
-    for (let n = 1; n <= 7; n++) propias[String(n)] = () => ir(String(n));
+    for (let n = 1; n <= 9; n++) propias[String(n)] = () => ir(String(n)); // (8 y 9: los dos finales)
     if (propias[k]) { e.preventDefault(); e.stopImmediatePropagation(); if (!e.repeat) propias[k](); return; }
     if (!['f', 'h', 'v', 'c', 'g', 'o'].includes(k)) e.stopImmediatePropagation(); // (9/11: O gira la imagen, para la cámara en vertical)
   }
@@ -758,10 +1065,11 @@ export function crearDirector(api) {
       `<b>Partes</b> <span class="dim">propio retraso impreciso contrario</span>\n${partes}\n\n` +
       `<b>Datos</b>\nconsignas: ${cs}\ntrampa: ${datos.trampa === null ? '—' : datos.trampa ? 'cayó' : 'no cayó'} · ` +
       `estatuas: ${datos.estatuas.map(x => `${x.quieto ? '✔' : '✘'}${Math.round(x.encaje * 100)}%`).join(' ') || '—'}\n` +
-      `¡cambio!: ${datos.copias.map(x => `${x.ok ? '✔' : '✘'}${x.id}`).join(' · ') || '—'} · águila: ${datos.aguila ? `${Math.round(datos.aguila.mejor * 100)}%${datos.aguila.solos ? ' solos' : ' con ayuda'}` : '—'}\n` +
+      `elección: ${datos.eleccion || '—'} · golpes al vidrio ${datos.golpes} · grietas cerradas ${datos.reparadas} · cuadrados en su caja ${datos.piezas} · cortó ${datos.cortados ?? "—"}\n` +
+      `golpe: avance ${f2(S.golpe.avance)}/${UMBRAL.golpe.avance} m · salto ${f2(S.golpe.salto)}/${UMBRAL.golpe.salto} · contados ${S.golpe.n}\n` +
       '\n' +
       `<b>Últimas cosas</b>\n${registro.map(s => '<span class="dim">' + s.replace(/</g, '&lt;') + '</span>').join('\n')}\n\n` +
-      `<span class="dim">0 reiniciar · 1–7 escena · → siguiente · Espacio pausa · D panel · M marcar error\nF pantalla completa · H panel del tracking · V cámara · C calibrar postura · O girar la imagen</span>`,
+      `<span class="dim">0 reiniciar · 1–7 escena · 8 final libre · 9 final de Richie · → siguiente · Espacio pausa · D panel · M marcar error\nF pantalla completa · H panel del tracking · V cámara · C calibrar postura · O girar la imagen</span>`,
     );
   }
 

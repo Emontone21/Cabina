@@ -13,6 +13,11 @@ export const UMBRAL = {
   quieto: 0.5,         // movimiento (anchos de hombro por segundo, + giro de cabeza) por debajo: "quieto". Medido en B2: quieto 0,06–0,3; aplaudir 0,6–1,2; caminar 1,4–2,7
   mira: { giro: 22, cabeceo: 25 },
   sostener: 0.25,      // segundos que tiene que durar algo para contarlo
+  // v0.7 golpe al vidrio: avance = metros que la muñeca pasa por delante del hombro (mínimo); salto = cuánto tiene que
+  // subir de golpe respecto de medio segundo antes. Si no toma los golpes, bajar el salto; si cuenta de más, subirlo.
+  // SIN PROBAR con un golpe de verdad (no hay grabaciones de ese gesto): afinar con la cámara mirando el panel D.
+  // cerca = a cuántos anchos de hombro del hombro, en la imagen, tiene que quedar la mano (más lejos es saludar o levantarla).
+  golpe: { avance: 0.3, salto: 0.13, cerca: 1.0 },
 };
 
 const bs = (cats, n) => cats.find(c => c.categoryName === n)?.score ?? 0;
@@ -27,6 +32,8 @@ export function crearSenales(api) {
     manos: { izq: false, der: false }, manosArriba: false, unaArriba: false, cruz: false, saludo: false,
     mira: false, mov: 0, quieto: true, quietoSeg: 0,
     mano: { ok: false, x: 0.5, y: 0.5, perdida: 0 }, // v0.2: puntero (0 a 1 sobre la imagen)
+    // v0.7: golpes con la palma hacia la pantalla (n = cuántos van; avance y salto = lo que se ve en el panel D)
+    golpe: { n: 0, avance: 0, salto: 0, hace: 99, manos: [{ av: 0, lento: 0, vista: 0, armada: false }, { av: 0, lento: 0, vista: 0, armada: false }] },
   };
   const prev = {}; let sw = 0.2, tPrev = 0, caraVista = false, prevCab = null;
   const hist = { izq: [], der: [] };
@@ -97,6 +104,33 @@ export function crearSenales(api) {
             const k = M.ok ? Math.min(1, dt / 0.12) : 1;
             M.x += (u - M.x) * k; M.y += (v - M.y) * k; M.ok = true; M.perdida = 0;
           } else if ((M.perdida += dt) > 0.4) M.ok = false;
+        }
+        // v0.7 GOLPE: empujar la palma hacia la pantalla. Se mide cuánto pasa la muñeca por delante de su hombro (en
+        // metros, de los puntos 3D del cuerpo) y cuenta un golpe cuando ese avance sube rápido y pasa UMBRAL.golpe.
+        // Para el siguiente hay que volver a traer la mano (baja de la mitad del umbral).
+        // Cada mano se mide aparte. Con los brazos quietos el avance ya da 0,25–0,35 (medido con una partida del 22/11:
+        // MediaPipe pone las muñecas adelante), así que lo que cuenta es el SALTO respecto de medio segundo antes. Una
+        // mano que recién aparece no cuenta (tiene que llevar un rato a la vista).
+        {
+          const G = S.golpe, pw = fd.poseW;
+          G.hace += dt; G.avance = 0; G.salto = 0;
+          for (const [k, h, m] of [[0, 11, 15], [1, 12, 16]]) {
+            const M = G.manos[k];
+            if (!pw || vis(pn, m) < 0.4) { M.vista = 0; M.armada = false; continue; }
+            const av = pw[h].z - pw[m].z;
+            if (M.vista === 0) { M.av = av; M.lento = av; }
+            M.vista += dt;
+            M.av += (av - M.av) * Math.min(1, dt / 0.06);
+            M.lento += (M.av - M.lento) * Math.min(1, dt / 0.5);
+            const salto = M.av - M.lento;
+            // un golpe hacia la pantalla termina con la mano delante del hombro (en la imagen, cerca de él); levantar la
+            // mano o saludar la lleva lejos del hombro: eso no cuenta (medido: saludando contaba golpes de más)
+            const hp = px(pn[h]), mp = px(pn[m]), cerca = Math.hypot(mp.x - hp.x, mp.y - hp.y) < UMBRAL.golpe.cerca * sw;
+            if (M.armada && cerca && M.vista > 0.4 && M.av > UMBRAL.golpe.avance && salto > UMBRAL.golpe.salto && G.hace > 0.45) { G.n++; G.hace = 0; M.armada = false; }
+            else if (!M.armada && salto < UMBRAL.golpe.salto * 0.3) M.armada = true;
+            if (M.av > G.avance) G.avance = M.av;
+            if (salto > G.salto) G.salto = salto;
+          }
         }
         // movimiento: velocidad media de nariz, hombros, codos y muñecas (en anchos de hombro por segundo)
         let suma = 0, n = 0;

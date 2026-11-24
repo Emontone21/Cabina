@@ -7,8 +7,9 @@
 
 const EXT = ['wav', 'mp3', 'ogg'];
 const DIR = new URL('../audio/', import.meta.url).href;
-const FX = ['asomada', 'fiuuu', 'inicio', 'bien', 'mal', 'estatua', 'tic', 'glitch', 'zumbido', 'hilo', 'toc', 'risa', 'apagar', 'aplausos', 'telon', 'foco'];
-const MUSICAS = ['menu', 'juego', 'oscura'];
+const FX = ['asomada', 'fiuuu', 'inicio', 'bien', 'mal', 'estatua', 'tic', 'glitch', 'zumbido', 'hilo', 'toc', 'risa', 'apagar', 'aplausos', 'telon', 'foco',
+  'vidrio', 'estalla', 'sella', 'click', 'festejo', 'corte']; // v0.7: el vidrio se raja · estalla · una grieta se cierra · un clic · el festejo del final · un corte
+const MUSICAS = ['menu', 'juego', 'oscura', 'arriba']; // arriba (v0.7): la del juego de cortar, con pulso
 
 export function crearAudio(guion) {
   let ctx = null, master = null, analyser = null, buf = null;
@@ -146,7 +147,7 @@ export function crearAudio(guion) {
     switch (nombre) {
       case 'asomada': osc('sine', 700, t, 0.12, 0.25 * vol, d, { f1: 1100 }); osc('sine', 900, t + 0.14, 0.14, 0.2 * vol, d, { f1: 1500 }); break;
       case 'fiuuu': osc('sine', 220, t, 0.7, 0.35 * vol, d, { f1: 1600, ataque: 0.05 }); ruido(t, 0.7, 0.25 * vol, d, { f: 400, f1: 4000, q: 2 }); break;
-      case 'inicio': [72, 76, 79, 84].forEach((n, i) => osc('triangle', midi(n), t + i * 0.09, 0.3, 0.25 * vol, d)); break;
+      case 'inicio': [62, 69, 74, 77].forEach((n, i) => osc('sine', midi(n), t + i * 0.16, 1.1, 0.16 * vol, d, { ataque: 0.02 })); break; // v0.7: en re menor y más lento, para que no choque con la música de misterio (antes un arpegio alegre)
       case 'bien': osc('sine', midi(88), t, 0.25, 0.3 * vol, d); osc('sine', midi(93), t + 0.1, 0.5, 0.3 * vol, d); break;
       case 'mal': osc('square', 330, t, 0.35, 0.12 * vol, d, { f1: 140, filtro: { tipo: 'lowpass', f: 1200 } }); break;
       case 'estatua': ruido(t, 0.05, 0.5 * vol, d, { tipo: 'highpass', f: 2000 }); osc('sine', 110, t, 1.2, 0.45 * vol, d); osc('sine', 165, t, 0.9, 0.2 * vol, d); break;
@@ -166,6 +167,26 @@ export function crearAudio(guion) {
       case 'aplausos': for (let i = 0; i < 26; i++) ruido(t + Math.random() * 1.8, 0.03, (0.25 + Math.random() * 0.3) * vol, d, { tipo: 'bandpass', f: 1200 + Math.random() * 1800, q: 1.4 }); break;
       case 'telon': ruido(t, 1.4, 0.22 * vol, d, { tipo: 'lowpass', f: 700, f1: 300 }); break;
       case 'foco': osc('square', 90, t, 0.04, 0.3 * vol, d, { filtro: { tipo: 'lowpass', f: 800 } }); ruido(t, 0.05, 0.4 * vol, d, { tipo: 'highpass', f: 2500 }); osc('sine', 60, t, 1.2, 0.18 * vol, d); break;
+      // v0.7: el vidrio
+      case 'vidrio': // se raja: chasquido seco + astillas agudas
+        ruido(t, 0.09, 0.9 * vol, d, { tipo: 'highpass', f: 2600 }); osc('sine', 150, t, 0.18, 0.6 * vol, d, { f1: 60 });
+        for (let i = 0; i < 7; i++) osc('sine', 2400 + Math.random() * 4200, t + 0.02 + Math.random() * 0.4, 0.06 + Math.random() * 0.2, (0.05 + Math.random() * 0.09) * vol, d);
+        break;
+      case 'estalla': // estalla y caen los pedazos
+        ruido(t, 0.55, 1.0 * vol, d, { tipo: 'highpass', f: 1700 }); ruido(t, 0.3, 0.8 * vol, d, { tipo: 'lowpass', f: 500 }); osc('sine', 110, t, 0.5, 0.7 * vol, d, { f1: 40 });
+        for (let i = 0; i < 46; i++) { const r = Math.random(); osc(i % 3 ? 'sine' : 'triangle', 1700 + Math.random() * 6000, t + 0.05 + r * r * 2.2, 0.05 + Math.random() * 0.3, (0.04 + Math.random() * 0.1) * (1 - r * 0.7) * vol, d); }
+        break;
+      case 'sella': osc('sine', 520, t, 0.7, 0.2 * vol, d, { f1: 1040, ataque: 0.08 }); osc('sine', 1560, t + 0.25, 1.1, 0.07 * vol, d, { ataque: 0.05 }); break;
+      case 'click': osc('square', 1900, t, 0.02, 0.16 * vol, d); ruido(t, 0.03, 0.3 * vol, d, { tipo: 'highpass', f: 3500 }); break;
+      case 'corte': // el filo que pasa y el cuadrado que se parte
+        ruido(t, 0.12, 0.5 * vol, d, { tipo: 'bandpass', f: 2200, f1: 7000, q: 1.2 });
+        osc('triangle', midi(86 + (Math.random() * 5 | 0) * 2), t + 0.03, 0.22, 0.2 * vol, d); osc('sine', 190, t + 0.02, 0.1, 0.35 * vol, d, { f1: 90 });
+        break;
+      case 'festejo': // el cierre "arriba": un arpegio que sube y un brillo
+        [62, 66, 69, 74, 78, 81, 86].forEach((n, i) => { osc('triangle', midi(n), t + i * 0.07, 0.5, 0.22 * vol, d); osc('sine', midi(n + 12), t + i * 0.07, 0.35, 0.08 * vol, d); });
+        [74, 78, 81, 86].forEach(n => osc('sine', midi(n), t + 0.55, 1.6, 0.14 * vol, d, { ataque: 0.02 }));
+        ruido(t + 0.5, 1.2, 0.18 * vol, d, { tipo: 'highpass', f: 5000 }); osc('sine', 73.4, t + 0.5, 0.9, 0.5 * vol, d, { f1: 55 });
+        break;
     }
   }
   function zumbar(on) {
@@ -181,32 +202,36 @@ export function crearAudio(guion) {
   }
 
   // ---------------------------------------------------------------- musica (loops generados por pasos)
+  // v0.7 (pedido de Agustín, 23/11): una sola música para toda la experiencia, de misterio y minimalista, que acompañe
+  // sin distraer. Es un colchón grave que respira (colchon: frecuencias en Hz; filtro: qué tan apagado) y, cada tanto,
+  // una nota suelta como de campana, con eco (notas: paso → [nota, volumen]; el ciclo tiene 64 pasos, unos 18 s; en las
+  // vueltas impares suena "notasB" si está). Los tres nombres de antes quedan como tres intensidades de lo mismo:
+  // menu = la espera (casi nada) · juego = desde que se abre hasta la discusión · oscura = desde la discusión (más grave
+  // y con una disonancia). Las versiones de circo (menú, Wii y dron) están en _versiones/cabina_v0.6.
+  const campana = (n, v, largo = 2.6) => [['sine', n, largo, v, 0.02], ['sine', n + 12, largo * 0.6, v * 0.22, 0.02], ['triangle', n + 19, largo * 0.35, v * 0.06, 0.02]];
   const TEMAS = {
-    // menu: arpegios suaves, tipo canal de juegos
-    menu: { bpm: 96, pasos: 32, vol: 0.55, nota(i) {
-      const acordes = [[60, 64, 67, 71], [57, 60, 64, 67], [53, 57, 60, 64], [55, 59, 62, 65]], a = acordes[Math.floor(i / 8) % 4];
-      const out = [];
-      if (i % 2 === 0) out.push(['sine', a[(i / 2) % 4] + 12, 0.35, 0.18]);
-      if (i % 8 === 0) out.push(['triangle', a[0] - 12, 0.6, 0.22]);
-      return out;
-    } },
-    // juego: alegre, tipo Wii (marimba + bajo + shaker)
-    juego: { bpm: 124, pasos: 32, vol: 0.6, nota(i) {
-      const mel = [72, null, 76, 79, 81, null, 79, 76, 74, null, 76, 74, 72, null, 69, null, 72, null, 76, 79, 84, null, 81, 79, 76, 79, 81, null, 79, null, null, null];
-      const baj = [48, null, 55, null, 45, null, 52, null, 41, null, 48, null, 43, null, 50, null];
-      const out = [];
-      if (mel[i]) out.push(['sine', mel[i], 0.22, 0.2], ['sine', mel[i] + 24, 0.08, 0.04]);
-      if (i % 2 === 0 && baj[(i / 2) % 16]) out.push(['triangle', baj[(i / 2) % 16], 0.25, 0.25]);
-      if (i % 2 === 1) out.push(['ruido', 7000, 0.04, 0.05]);
-      return out;
-    } },
-    // oscura: dron grave y alguna campana disonante (se arma aparte en ponerMusica)
-    oscura: { bpm: 60, pasos: 16, vol: 0.9, nota(i) {
-      const out = [];
-      if (i % 8 === 0) out.push(['sine', 33, 2.5, 0.35]);
-      if (i === 5 || i === 13) out.push(['sine', [78, 84][i === 5 ? 0 : 1], 2.0, 0.05]);
-      return out;
-    } },
+    menu: { bpm: 54, pasos: 64, vol: 0.8, colchon: [73.42, 110], filtro: 260, volColchon: 0.085,
+      notas: { 0: [62, 0.1], 36: [69, 0.07] }, notasB: { 8: [65, 0.08], 44: [62, 0.07] } },
+    juego: { bpm: 54, pasos: 64, vol: 0.9, colchon: [73.42, 110, 146.83], filtro: 340, volColchon: 0.085,
+      notas: { 0: [62, 0.16], 7: [65, 0.12], 16: [69, 0.13], 30: [64, 0.1], 40: [62, 0.12], 47: [67, 0.1], 56: [57, 0.12] },
+      notasB: { 0: [62, 0.16], 9: [69, 0.11], 18: [72, 0.1], 32: [70, 0.09], 42: [69, 0.11], 52: [65, 0.12] } },
+    oscura: { bpm: 54, pasos: 64, vol: 1, colchon: [55, 58.27, 82.41], filtro: 200, volColchon: 0.1,
+      notas: { 0: [57, 0.14], 22: [58, 0.09], 40: [52, 0.13], 54: [63, 0.06] }, notasB: { 4: [45, 0.16], 30: [56, 0.08], 46: [57, 0.1] },
+      extra: i => (i % 32 === 0 ? [['sine', 33, 3.2, 0.3, 0.4]] : []) },
+    // arriba: la del juego de cortar. El mismo re menor, pero con pulso: bombo, palmas y un arpegio que no para.
+    arriba: { bpm: 126, pasos: 32, vol: 1, colchon: [73.42, 110], filtro: 420, volColchon: 0.05, notas: {},
+      extra: i => {
+        const out = [], arp = [62, 65, 69, 74, 69, 65, 62, 57, 60, 65, 69, 72, 69, 65, 60, 57][Math.floor(i / 2) % 16];
+        if (i % 4 === 0) out.push(['sine', 38, 0.2, 0.5, 0.004]);          // bombo
+        if (i % 4 === 2) out.push(['ruido', 6500, 0.04, 0.1]);              // platillo
+        if (i % 8 === 4) out.push(['ruido', 1700, 0.08, 0.2]);              // palmas
+        if (i % 2 === 0) out.push(['triangle', arp, 0.16, 0.11, 0.004], ['sine', arp - 24, 0.2, i % 8 === 0 ? 0.22 : 0.08, 0.004]);
+        return out;
+      } },
+  };
+  for (const t of Object.values(TEMAS)) t.nota = (i, vuelta) => {
+    const n = (vuelta % 2 && t.notasB ? t.notasB : t.notas)[i];
+    return [...(n ? campana(n[0], n[1]) : []), ...(t.extra ? t.extra(i) : [])];
   };
   let pendiente = null;
   function ponerMusica(nombre) {
@@ -221,19 +246,33 @@ export function crearAudio(guion) {
       m.extra.push(v.s);
     } else {
       const tema = TEMAS[nombre];
-      if (nombre === 'oscura') { // dron
-        const fl = ctx.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = 220; fl.connect(g);
-        const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = 0.07; lg.gain.value = 120; lfo.connect(lg).connect(fl.frequency); lfo.start();
-        for (const f of [55, 55.4, 82.6]) { const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; const og = ctx.createGain(); og.gain.value = 0.12; o.connect(og).connect(fl); o.start(); m.extra.push(o); }
-        m.extra.push(lfo);
-      }
+      // eco largo y apagado para las notas sueltas (da el espacio de "cuarto vacío")
+      const eco = ctx.createDelay(1.5), vuelve = ctx.createGain(), apaga = ctx.createBiquadFilter(), mojado = ctx.createGain();
+      eco.delayTime.value = 0.56; vuelve.gain.value = 0.46; apaga.type = 'lowpass'; apaga.frequency.value = 1500; mojado.gain.value = 0.55;
+      const notas = ctx.createGain(); notas.connect(g); notas.connect(eco);
+      eco.connect(apaga).connect(vuelve).connect(eco); apaga.connect(mojado).connect(g);
+      m.nodos = [eco, vuelve, apaga, mojado, notas];
+      // colchón: por cada frecuencia, dos senos apenas desafinados y un triángulo bajito; el filtro se abre y se cierra
+      // muy despacio y el volumen "respira"
+      const fl = ctx.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = tema.filtro; fl.Q.value = 0.7;
+      const resp = ctx.createGain(); resp.gain.value = 0.8; fl.connect(resp).connect(g);
+      const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = 0.045; lg.gain.value = tema.filtro * 0.45; lfo.connect(lg).connect(fl.frequency); lfo.start();
+      const lfo2 = ctx.createOscillator(), lg2 = ctx.createGain(); lfo2.frequency.value = 0.11; lg2.gain.value = 0.2; lfo2.connect(lg2).connect(resp.gain); lfo2.start();
+      m.extra.push(lfo, lfo2); m.nodos.push(fl, resp);
+      tema.colchon.forEach((f, k) => {
+        for (const [tipo, des, v] of [['sine', -0.17, 1], ['sine', 0.21, 1], ['triangle', 0, 0.3]]) {
+          const o = ctx.createOscillator(); o.type = tipo; o.frequency.value = f + des;
+          const og = ctx.createGain(); og.gain.value = tema.volColchon * v * (k === 1 && tema === TEMAS.oscura ? 0.45 : 1);
+          o.connect(og).connect(fl); o.start(); m.extra.push(o);
+        }
+      });
       const dur16 = 60 / tema.bpm / 4;
       m.timer = setInterval(() => {
         if (m.cortada) return;
         while (m.prox < ahora() + 0.15) {
-          for (const [tipo, n, d, v] of tema.nota(m.paso % tema.pasos)) {
-            if (tipo === 'ruido') ruido(m.prox, d, v * tema.vol, g, { tipo: 'highpass', f: n });
-            else osc(tipo, midi(n), m.prox, d + 0.05, v * tema.vol, g, { ataque: tipo === 'sine' && d > 1 ? 0.3 : 0.005 });
+          for (const [tipo, n, d, v, atq] of tema.nota(m.paso % tema.pasos, Math.floor(m.paso / tema.pasos))) {
+            if (tipo === 'ruido') ruido(m.prox, d, v * tema.vol, notas, { tipo: 'highpass', f: n });
+            else osc(tipo, midi(n), m.prox, d + 0.05, v * tema.vol, notas, { ataque: atq ?? (tipo === 'sine' && d > 1 ? 0.3 : 0.005) });
           }
           m.paso++; m.prox += dur16;
         }
@@ -246,7 +285,7 @@ export function crearAudio(guion) {
     const m = musica; musica = null;
     m.gain.gain.cancelScheduledValues(ahora());
     m.gain.gain.setTargetAtTime(0.0001, ahora(), fade / 4);
-    setTimeout(() => { clearInterval(m.timer); m.extra.forEach(s => { try { s.stop(); } catch { /* */ } }); m.gain.disconnect(); }, fade * 1000 + 300);
+    setTimeout(() => { clearInterval(m.timer); m.extra.forEach(s => { try { s.stop(); } catch { /* */ } }); m.gain.disconnect(); (m.nodos || []).forEach(n => { try { n.disconnect(); } catch { /* */ } }); }, fade * 1000 + 300);
   }
   // estatuas: la musica se corta de golpe y despues sigue donde estaba
   function cortarMusica() {

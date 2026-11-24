@@ -1,6 +1,126 @@
-# Cabina — v0.6 (el espejo): "el número de tiesme · ¡cambio!"
+# Cabina — v0.7 (el espejo): dos finales
 
-## Estado v0.6 (22/11) — el espejo tapado (falta probar con la cámara)
+## Estado v0.7 (23/11) — el vidrio se rompe con el golpe de ella y hay dos finales (falta probar con la cámara)
+Agustín (23/11), después de mirar la partida simulada de la v0.6: "todavía no me convenció ninguno" de los juegos del
+final. Pidió: (1) que el vidrio se rompa recién cuando tiesme pega para abajo (el golpe al vidrio de la escena 6);
+(2) que después de esa charla la persona elija entre dos caminos: **tiesme libre** (seguir rompiendo el vidrio para que
+escape; da las gracias y termina) o **Richie con el control** (reparar el espejo con la mano; tiesme deja de moverse
+sola, la persona vuelve a manejarla y hay un jueguito distinto para demostrar el control); (3) música de fondo de
+misterio, minimalista, en toda la experiencia. La v0.6 quedó en `_versiones/cabina_v0.6/` (ahí está "¡Cambio!").
+- **Recorrido**: Espera → 1 Presentación → 2 Richie dice → 3 Ensayo → 4 Revelación → 5 Discusión → 6 Registran que
+  estás (se raja el vidrio) → **7 La elección** → **8 Final libre** *o* **9 Final de Richie** → Fin. Teclas `1`–`9`
+  (`8` y `9` saltan directo a cada final).
+- **Escena 5**: solo cambia la luz (se apaga la lamparita, todo frío). El vidrio ya no se raja ahí.
+- **Escena 6**: el segundo golpe de ella raja el vidrio **donde pega su mano**. Richie: "…Lo rajaste." y sigue la
+  charla de antes ("¿Hola?" / "Perdón. No es siempre así." / "Es siempre así.").
+- **Escena 7, la elección (sin menú)**: tiesme: "Si se rompe del todo, salgo… Pegale al vidrio. Con la palma, fuerte."
+  Richie: "Pasale la mano por arriba, despacito, y se arregla. Y todo vuelve a ser como antes." Cartel: "golpeá el
+  vidrio · o pasale la mano". **El primer gesto decide.** Si en 14 s nadie elige, decide Richie ("¿No elegís? Entonces
+  elijo yo. Como siempre.") y va al final de Richie.
+- **Escena 8, final libre** (~35 s): cada golpe con la palma hacia la pantalla raja más el vidrio (ella pega del otro
+  lado a la vez; Richie protesta). Al tercero **estalla**: quedan las astillas en el marco, vuelve la luz tibia,
+  "Gracias." / "¿Cómo gracias? ¿Y yo? ¡Yo voy arriba!" / "Vos venís conmigo. Pero ahora elijo yo." **Sale del propio
+  espejo** (pedido de Agustín el 23/11: "que salga del propio espejo y escape, en vez de irse por detrás"; antes se iba
+  por el costado, dentro del reflejo): apoya las manos en los bordes del marco, lo cruza hacia la persona (queda por
+  delante del marco, cada vez más grande), te mira un momento de cerca y se va pasando al lado de la cámara. El espejo
+  queda vacío y sube la sábana. Si la persona no pega en 6 s, pega ella sola (siempre termina).
+  *Cómo está hecho*: el marco es una capa que va siempre delante de la imagen 3D; cuando el vidrio estalla (tapado
+  por el destello) esa capa se esconde y el mismo marco, ya con las astillas, se pinta en el fondo
+  (`pantalla.marcoAtras(true)` + `esc.frente(...)`), así ella queda delante. Vuelve a su lugar en la Espera. El
+  movimiento es por programa (posiciones en `director.js`, escena 8): se reemplaza por una animación de Blender.
+- **Escena 9, final de Richie** (~50 s): la grieta tiene 3 ramas; pasándole la mano a cada una (se ve el puntero y un
+  círculo que se llena) se cierra en dorado. Cada una le saca algo a ella: los brazos ("Los brazos… no los siento."),
+  el cuerpo ("Richie. Por favor.") y la cara. Vuelve a ser muñeca y te copia como al principio. Después, **las cajas**
+  (el juego para demostrar el control). **Versión de ahora** (pedida por Agustín el 23/11: "los dos cuadrados, uno a la
+  izquierda y otro a la derecha, van subiendo y bajando, y el usuario tiene que poner la mano justo cuando está dentro
+  del cuadrado y mantenerla 2-3 segundos; algo así como el minijuego de penales de Bully"): es un juego de **acertar el
+  momento**. A cada lado de ella hay una caja fija y un cuadrado dorado que sube y baja por un riel, pasando por la
+  caja. Cuando el cuadrado está dentro de la caja, la caja se ilumina: ahí hay que **meter la mano en la caja**. Si es
+  justo, el cuadrado queda agarrado, **pero tiene "vida" propia** (pedido de Agustín, también el 23/11: "por más que uno
+  lo esté poniendo bien, los cuadrados deben seguir queriendo ir para arriba o abajo, y con la mano tengo que seguir
+  moviéndolos dentro del cuadrado grande para que no se escapen"): sigue a la mano de arriba abajo, pero además tira
+  solo para arriba o para abajo, tiembla, y cada 0,9 a 1,8 s cambia de sentido. Hay que ir corrigiendo con la mano para
+  mantenerlo **dentro de la caja 2,5 s en total** (la caja se llena desde abajo solo mientras está adentro; afuera se
+  va vaciando). Si queda afuera más de 0,7 s, o se pierde la mano, **se escapa** ("¡Se te fue!") y vuelve a subir y
+  bajar: hay que atraparlo de nuevo. Si la mano entra a destiempo, la caja se pone roja, Richie dice "¡Tarde!" o "¡Ahí no! Esperalo.", y hay que
+  sacar la mano y volver a probar (dejar la mano quieta en la caja no sirve: cuenta el momento de entrar). Con uno trabado, el otro va más rápido. **Cada cuadrado trabado le
+  traba a ella el brazo de ese lado y la endereza**: arranca floja, con la cabeza caída, y con los dos queda derecha y
+  rígida. Richie: "A ver si quedó bien. Cada cosa en su caja." / "Cuando el cuadrado pase por la caja, poné la mano
+  ahí. Y no la saques." / "Eso. Uno." / "Listo. Todo en su lugar." Si pasan 14 s sin trabar ninguno, lo traba Richie.
+  Y después, el último juego: **cortar** (abajo).
+  Todo se ajusta en `guion.js` → `control`: `cajas` (dónde están), `recorrido` (de dónde a dónde suben y bajan),
+  `periodo` (qué tan rápido: 3,0 s la ida y vuelta, 2,2 s el segundo), `dentro` (cuánto perdona el momento),
+  `sostener`, `radioCaja`, `plazoPieza`, y `vida` (cuánto tira, cada cuánto cambia de sentido, cuánto perdona, cuándo se
+  escapa). **Sin probar con una persona**: con el retraso del tracking el momento justo y el corregir pueden sentirse
+  corridos; si cuesta atraparlo, subir `dentro` o `periodo`; si cuesta sostenerlo, bajar `vida.tiron` o subir
+  `vida.dentro`.
+  *Historia del mismo 23/11*: primero fue "el interruptor" (idea de Claude: mano arriba la prendía, mano abajo la
+  apagaba), después una primera versión de las cajas (llevar con la mano cada cuadrado a su caja; opción A de un
+  dibujo con dos opciones), y por último esta. Lo que no contestó Agustín y quedó como lo propuso Claude: las piezas
+  le traban el cuerpo a ella, y Richie termina lo que la persona no haga.
+- **Cortar, el cierre del final de Richie** (~25 s; pedido por Agustín el 23/11: "mejor que sea un juego tipo Fruit
+  Ninja"). Cómo se llegó: pidió un juego más después de las cajas y descartó dos tandas de ideas de Claude (ponerle la
+  cara, que no se mueva, Richie dice la última, darle cuerda; guardarle las ideas, el panel, la cerradura, la
+  secuencia, encerrarla, armar la muñeca). Lo que quiere: que sea **abstracto, que se entienda solo, con manos y
+  cuerpo, divertido, y que "termine bien arriba, así se quedan con ganas; no quiero que sea un juego aburrido"**. De
+  cuatro ideas tipo arcade (el rebote, los que se prenden, al ritmo, esquivar) eligió esquivar; se armó y, antes de
+  verlo, lo cambió por este. Es un juego **del género** de cortar lo que vuela, hecho con lo de acá (no una copia de ese
+  juego: sin su nombre, sus frutas ni su aspecto).
+  Cómo es: Richie "¡Y ahora, a probarla! ¡Cortá todo lo que vuele!"; ella vuelve a copiarte; desde abajo **saltan
+  cuadrados dorados**, dentro del espejo, girando, y se cortan **pasándoles la mano rápido**: el cuadrado se parte en
+  dos mitades que caen. El filo son **las manos de ella en la pantalla** (te copia, así que son las tuyas), y cada mano
+  deja una estela blanca cuando va rápido. Salen por tandas (1, 1, 1, 2, 1, 2, 2, 3, 2 = 15), cada vez más juntas. El
+  que se cae sin cortar no resta nada. Abajo, la barra con "cortaste N". Al final sube **el grande** al medio ("¡El
+  grande! ¡Dale, dale, dale!"), que aguanta 4 cortes; si nadie lo corta en 5 s, se va rompiendo solo. Cuando revienta:
+  lluvia de cuadraditos dorados, arpegio que sube y aplausos, Richie "¡Impecable! ¡La manejás mejor que yo!" (o
+  "¡Bueno, casi! ¡Pero la manejaste vos!" con menos del 60 %) y **la sábana cae de golpe** (0,55 s) sobre el festejo.
+  Suena la música `arriba` (el mismo re menor con bombo, palmas y arpegio).
+  *Cómo se mide*: no usa nada nuevo de la cámara: mira dónde quedan las manos de tiesme en la pantalla
+  (`cuerpo.enPantalla`) y qué tan rápido van; corta si pasan de `filo` (0,9 anchos de pantalla por segundo) y el
+  tramo cruza el cuadrado. Todo se ajusta en `guion.js` → `cortar` (tandas, tiempos, fuerza del salto, gravedad,
+  tamaño, `filo`, `margen`, el grande). **Sin probar con una persona**: hay que ver con la cámara si las manos de ella
+  llegan a todos lados (ella está en primer plano: lo que salta muy arriba o muy al costado puede quedar lejos), si
+  `filo` está bien (bajarlo si cuesta cortar) y si el retraso del tracking molesta para apuntar.
+  Las piezas en la pantalla: `pantalla.volando`, `pantalla.estela`, `pantalla.festejo`. Sonidos nuevos: `fx-corte`,
+  `fx-festejo`.
+- **El fin** (corregido el 23/11; Agustín: "se debe cerrar el telón y ahí termina, no debe volver tiesme"): la sábana
+  tapa el espejo y **queda cerrada todo el tiempo que la persona siga ahí**. Recién cuando lleva 2,5 s fuera de cuadro
+  (`guion.casos.salidaA`) vuelve la Espera, con el título, para la persona siguiente. Antes esperaba 10 s y, si la
+  persona seguía parada, arrancaba otra partida sola (se abría la sábana y volvía tiesme): pasaba desde la v0.4. Para
+  empezar de nuevo con la misma persona: tecla `1`.
+- **Cómo se mide** (`cabina/senales.js`): **golpe** = la muñeca avanza de golpe por delante de su hombro (puntos 3D del
+  cuerpo; `UMBRAL.golpe`: avance 0,3 m, salto 0,13, y la mano tiene que quedar cerca del hombro en la imagen, para que
+  saludar o levantar la mano no cuenten). **Pasar la mano** = el puntero de la mano (el de la v0.2) sobre la grieta.
+  En el panel D: "golpe: avance / salto / contados" y "elección / golpes / grietas cerradas".
+- **OJO, el golpe está SIN PROBAR con un golpe de verdad**: no hay grabaciones de ese gesto. Medido con la partida
+  `partida_20261122_182953` (Agustín jugando Richie dice): parado quieto el avance ya da 0,25–0,35, y saludando contó
+  **2 golpes falsos en 75 s**. Hay que probarlo con la cámara y afinar `UMBRAL.golpe.salto` (si no toma los golpes,
+  bajarlo; si cuenta de más, subirlo). Mientras tanto, quien atiende puede forzar el final con `8` o `9`.
+- **Música** (`cabina/audio.js`): una sola para todo, generada: un colchón grave que "respira" y, cada tanto, una nota
+  suelta como de campana con eco, en re menor. Tres intensidades con los nombres de antes: `menu` (la espera, casi
+  nada), `juego` (hasta la discusión) y `oscura` (desde la discusión: más grave, con una disonancia). El arpegio alegre
+  del arranque pasó a re menor. Sonidos nuevos generados: `fx-vidrio`, `fx-estalla`, `fx-sella`, `fx-click` (se
+  reemplazan con archivos en `audio/`, igual que los demás).
+- **Archivos tocados**: `cabina/director.js` (escenas 6 a 9, teclas, panel), `cabina/pantalla.js` (grietas por impactos:
+  `grietas`, `reparar`, `estallar`, `puntosGrieta`; íconos nuevos), `cabina/cabina.css` (grietas, astillas, destello),
+  `cabina/senales.js` (el golpe), `cabina/escenario.js` (la luz fría ya no raja el vidrio; `frente` para pintar el
+  marco detrás de ella; `apagar` quedó sin uso desde que salió el interruptor), `cabina/audio.js` (música y sonidos), `guion.js` (secciones `eleccion`, `libre`, `control` y las frases
+  `R6`/`T6` a `R9`; salieron `cambio` y las `R5`/`T5`) y `3actos.html` (el título). El motor no cambió.
+- **Probado sin cámara** (23/11, con `partida_20261122_182953.webm` como persona y saltando con las teclas): la escena
+  6 raja el vidrio en la mano de ella; la 7 espera y decide; la 8 completa (golpes simulados desde la consola: niveles
+  2 y 3, estalla, gracias, sale, fin); la 9 completa (las grietas las cerró Richie porque la persona del video no las
+  toca; el interruptor; fin); después vuelve a la Espera con el vidrio sano. Sin errores.
+- **Videos de cada final** (persona simulada; desde la elección, la mano la maneja un guion):
+  `2. tracking webcam/_pruebas/cabina/final_libre_v07.mp4` y `final_richie_v07.mp4`.
+- **Para mirar con la cámara**: (1) si el golpe con la palma se toma y no se dispara solo; (2) si se entiende que hay
+  que elegir sin que nadie lo explique; (3) si se llega cómodo a las tres ramas de la grieta con la mano; (4) las
+  cajas: si se llega con la mano a los cuadrados (abajo) y a las cajas (a los costados), y si agarrar dejando la mano
+  quieta se entiende solo; (5) la música: volumen y si acompaña.
+- **Sigue pendiente**: el modo demo del motor está roto desde que entró el cambio 18 del tracking v15
+  (`?demo` no arranca la partida: en `motor_v12/app.js`, `else raw = detect();` pisa al demo; el arreglo es
+  `else if (!DEMO) raw = detect();`). No se tocó: Agustín no contestó si lo quiere. Para grabar se corrige al vuelo.
+
+## Estado v0.6 (22/11) — el espejo tapado (archivada en `_versiones/cabina_v0.6/`)
 Agustín eligió **El espejo tapado** en la maqueta de mundos y pidió: "sí, dale, pasalo a producción". La v0.5.2 (cartón
 de circo) quedó en `_versiones/cabina_v0.5.2/`. La historia, los textos, los juegos y el motor no cambiaron: solo cómo
 se ve.
@@ -418,7 +538,8 @@ Los `.bat` son solo de Windows. Cada uno tiene un gemelo **`.command`** al lado,
 | Tecla | Qué hace |
 |---|---|
 | `0` | reiniciar (vuelve a la pantalla de título) |
-| `1` `2` `3` | saltar al acto 1 (entrada), 2 (estatuas) o 3 (te hablan) |
+| `1` a `9` | saltar a una escena (v0.7): 1 presentación · 2 Richie dice · 3 ensayo · 4 revelación · 5 discusión · 6 registran que estás · 7 la elección · **8 final libre** · **9 final de Richie** |
+| `M` | marcar "acá algo anduvo mal" (queda en el registro de la partida, con el segundo) |
 | `→` | saltar al paso siguiente |
 | `Espacio` | pausa / sigue |
 | `D` | panel de quien atiende: paso, segundos, lo que mide la cámara en vivo, los datos de la persona y las últimas frases |
